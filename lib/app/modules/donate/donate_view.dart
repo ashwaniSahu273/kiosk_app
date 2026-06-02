@@ -53,7 +53,7 @@ class _DonationCategoriesList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionCard(
-      title: 'Donation Categories',
+      title: 'Donation Campaigns',
       icon: Icons.volunteer_activism_rounded,
       expandChild: true,
       child: Obx(() {
@@ -86,8 +86,8 @@ class _DonationCategoriesList extends StatelessWidget {
   }
 }
 
-/// The loaded, non-empty categories list: each category with a Donate control
-/// that opens its donation entry point (Requirements 8.1, 8.2).
+/// The loaded, non-empty campaigns list with Share / Donate campaign cards
+/// (Requirements 8.1, 8.2).
 class _DonationsLoaded extends StatelessWidget {
   const _DonationsLoaded({required this.categories, required this.onDonate});
 
@@ -96,38 +96,23 @@ class _DonationsLoaded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
     return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 8),
       itemCount: categories.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (BuildContext context, int index) {
         final DonationCategory category = categories[index];
-        return Row(
-          children: <Widget>[
-            Icon(
-              Icons.savings_outlined,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                category.name,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
+        return DonationCampaignCard(
+          category: category,
+          onDonate: () => onDonate(category),
+          onShare: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Share link for ${category.name} copied.'),
+                behavior: SnackBarBehavior.floating,
               ),
-            ),
-            const SizedBox(width: 12),
-            KioskButton(
-              label: 'Donate',
-              icon: Icons.volunteer_activism_rounded,
-              variant: KioskButtonVariant.secondary,
-              onPressed: () => onDonate(category),
-            ),
-          ],
+            );
+          },
         );
       },
     );

@@ -136,13 +136,18 @@ class KioskButton extends StatelessWidget {
       return Text(label);
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Icon(icon, size: 20),
-        const SizedBox(width: 8),
-        Text(label),
-      ],
+    // Prevent RenderFlex overflows in narrow layouts by letting the contents
+    // scale down if needed (e.g. compact cards).
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Text(label, softWrap: false),
+        ],
+      ),
     );
   }
 }

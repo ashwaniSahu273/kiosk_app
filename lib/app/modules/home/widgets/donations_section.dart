@@ -7,15 +7,9 @@ import '../../../widgets/widgets.dart';
 
 /// Renders the loaded Donation Categories section (Requirements 8.1, 8.3).
 ///
-/// Each [DonationCategory] is shown with its name and a Donate control.
-/// Selecting Donate navigates to the donation entry point for *that* category,
-/// passing the category as the route argument so the destination screen
-/// (Task 16) can render the donation flow for the selected category
-/// (Req 8.2 — `Get.toNamed(AppRoutes.donate, arguments: category)`).
-///
-/// This widget renders the *non-empty* list only; the empty-state — which
-/// shows a disabled, grayed-out Donate control (Req 8.3) — is handled by the
-/// Home view.
+/// Each [DonationCategory] is shown as a horizontal campaign card with Share and
+/// Donate actions. Selecting Donate navigates to the donation entry point for
+/// that category (Req 8.2).
 class DonationsSection extends StatelessWidget {
   const DonationsSection({
     super.key,
@@ -23,11 +17,7 @@ class DonationsSection extends StatelessWidget {
     this.onDonate,
   });
 
-  /// The active organization's donation categories to display (non-empty).
   final List<DonationCategory> categories;
-
-  /// Optional override for the Donate action; defaults to navigating to the
-  /// donation entry point for the selected category.
   final void Function(DonationCategory category)? onDonate;
 
   void _donate(DonationCategory category) {
@@ -40,37 +30,30 @@ class DonationsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        for (final DonationCategory category in categories)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    category.name,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      itemCount: categories.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 14),
+      itemBuilder: (BuildContext context, int index) {
+        final DonationCategory category = categories[index];
+        return SizedBox(
+          width: 280,
+          child: DonationCampaignCard(
+            category: category,
+            compact: true,
+            onDonate: () => _donate(category),
+            onShare: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Share link for ${category.name} copied.'),
+                  behavior: SnackBarBehavior.floating,
                 ),
-                const SizedBox(width: 12),
-                KioskButton(
-                  label: 'Donate',
-                  icon: Icons.volunteer_activism_rounded,
-                  variant: KioskButtonVariant.secondary,
-                  onPressed: () => _donate(category),
-                ),
-              ],
-            ),
+              );
+            },
           ),
-      ],
+        );
+      },
     );
   }
 }

@@ -453,6 +453,7 @@ class _DonationsSectionContent extends StatelessWidget {
         shimmerShape: ShimmerShape.donationCategories,
         onRetry: () => controller.retrySection(HomeSection.donations),
         emptyMessage: 'No donation categories available.',
+        wrapInScrollView: false,
         onLoaded: (List<DonationCategory> categories) => DonationsSection(
           categories: categories,
         ),
@@ -540,12 +541,17 @@ Widget _sectionBody<T>({
   required VoidCallback onRetry,
   required Widget Function(T data) onLoaded,
   required String emptyMessage,
+  bool wrapInScrollView = true,
 }) {
   if (state is SectionLoading<T>) {
-    return SingleChildScrollView(child: ShimmerLoader(shape: shimmerShape));
+    final Widget loader = ShimmerLoader(shape: shimmerShape);
+    return wrapInScrollView ? SingleChildScrollView(child: loader) : loader;
   }
   if (state is SectionLoaded<T>) {
-    return SingleChildScrollView(child: onLoaded(state.data));
+    final Widget content = onLoaded(state.data);
+    return wrapInScrollView
+        ? SingleChildScrollView(child: content)
+        : content;
   }
   if (state is SectionEmpty<T>) {
     return _EmptyState(message: emptyMessage);

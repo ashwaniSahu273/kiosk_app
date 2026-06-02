@@ -137,22 +137,46 @@ final OrganizationData palosOrganizationData = OrganizationData(
     DonationCategory(
       organizationId: kPalosOrganizationId,
       id: 'palos-zakat',
-      name: 'Zakat',
+      name: 'Zakat Fund',
+      description:
+          'Fulfill your Zakat obligation and support families in need within '
+          'our community throughout the year.',
+      tagLabel: 'Give Hope',
+      goalAmount: 50000,
+      raisedAmount: 12500,
     ),
     DonationCategory(
       organizationId: kPalosOrganizationId,
       id: 'palos-sadaqah',
       name: 'Sadaqah',
+      description:
+          'Your voluntary charity helps provide meals, utilities assistance, '
+          'and emergency support for local families.',
+      tagLabel: 'Give Hope',
+      goalAmount: 25000,
+      raisedAmount: 8200,
     ),
     DonationCategory(
       organizationId: kPalosOrganizationId,
       id: 'palos-general-fund',
       name: 'General Fund',
+      description:
+          'Support daily masjid operations, programs, and community outreach '
+          'initiatives that serve everyone who walks through our doors.',
+      tagLabel: 'Give Hope',
+      goalAmount: 100000,
+      raisedAmount: 34200,
     ),
     DonationCategory(
       organizationId: kPalosOrganizationId,
       id: 'palos-masjid-maintenance',
       name: 'Masjid Maintenance',
+      description:
+          'Help maintain and improve our facilities — from HVAC and plumbing '
+          'to prayer hall upgrades and accessibility improvements.',
+      tagLabel: 'Give Hope',
+      goalAmount: 75000,
+      raisedAmount: 18900,
     ),
   ],
 );
@@ -206,11 +230,21 @@ final OrganizationData masjidAnNoorOrganizationData = OrganizationData(
       organizationId: kMasjidAnNoorOrganizationId,
       id: 'annoor-zakat',
       name: 'Zakat',
+      description:
+          'Support eligible recipients in our community through your annual '
+          'Zakat contribution.',
+      goalAmount: 30000,
+      raisedAmount: 4500,
     ),
     DonationCategory(
       organizationId: kMasjidAnNoorOrganizationId,
       id: 'annoor-building-fund',
       name: 'Building Fund',
+      description:
+          'Help expand and renovate our masjid so we can welcome more families '
+          'for prayer, classes, and community events.',
+      goalAmount: 200000,
+      raisedAmount: 67000,
     ),
   ],
 );
