@@ -16,8 +16,11 @@ enum ShimmerShape {
   /// A large countdown block above a row of prayer-time chips.
   nextPrayer,
 
-  /// Several stacked rows, each a program name bar with a trailing button block.
+  /// One compact campaign card (home horizontal programs strip).
   programsList,
+
+  /// Stacked full-size program campaign cards (programs destination).
+  programsCampaignList,
 
   /// A wrapped set of category chips paired with donate-button blocks.
   donationCategories,
@@ -75,6 +78,8 @@ class ShimmerLoader extends StatelessWidget {
         return const _NextPrayerSkeleton();
       case ShimmerShape.programsList:
         return const _ProgramsListSkeleton();
+      case ShimmerShape.programsCampaignList:
+        return const _ProgramsCampaignListSkeleton();
       case ShimmerShape.donationCategories:
         return const _DonationCategoriesSkeleton();
       case ShimmerShape.qrCard:
@@ -145,27 +150,81 @@ class _NextPrayerSkeleton extends StatelessWidget {
   }
 }
 
-/// Available Programs: several rows, each a name bar + a register-button block
-/// (mirrors [ProgramsSection]).
+/// Available Programs on Home: one compact campaign card skeleton.
 class _ProgramsListSkeleton extends StatelessWidget {
   const _ProgramsListSkeleton();
 
   @override
   Widget build(BuildContext context) {
+    return const _CampaignCardSkeleton(compact: true);
+  }
+}
+
+/// Programs destination: stacked full campaign card skeletons.
+class _ProgramsCampaignListSkeleton extends StatelessWidget {
+  const _ProgramsCampaignListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: List<Widget>.generate(4, (int index) {
+      children: List<Widget>.generate(3, (int index) {
         return Padding(
-          padding: EdgeInsets.only(bottom: index == 3 ? 0 : 16),
-          child: Row(
-            children: const <Widget>[
-              Expanded(child: _Block(height: 18)),
-              SizedBox(width: 16),
-              _Block(width: 96, height: 36, radius: 10),
-            ],
-          ),
+          padding: EdgeInsets.only(bottom: index == 2 ? 0 : 16),
+          child: const _CampaignCardSkeleton(),
         );
       }),
+    );
+  }
+}
+
+/// Hero + title + description + dual action blocks (programs destination).
+class _CampaignCardSkeleton extends StatelessWidget {
+  const _CampaignCardSkeleton({this.compact = false});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final double heroHeight = compact ? 88 : 160;
+    final EdgeInsets padding =
+        EdgeInsets.all(compact ? 10 : 16);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: _kBlock,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: _Block(height: heroHeight),
+          ),
+          Padding(
+            padding: padding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const _Block(height: 20),
+                const SizedBox(height: 8),
+                const _Block(height: 14),
+                const SizedBox(height: 6),
+                const _Block(height: 14, width: 280),
+                const SizedBox(height: 16),
+                Row(
+                  children: const <Widget>[
+                    Expanded(child: _Block(height: 44, radius: 12)),
+                    SizedBox(width: 12),
+                    Expanded(child: _Block(height: 44, radius: 12)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

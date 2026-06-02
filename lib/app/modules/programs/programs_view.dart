@@ -62,7 +62,7 @@ class _ProgramsList extends StatelessWidget {
 
         if (state is SectionLoading<List<Program>>) {
           return const SingleChildScrollView(
-            child: ShimmerLoader(shape: ShimmerShape.programsList),
+            child: ShimmerLoader(shape: ShimmerShape.programsCampaignList),
           );
         }
         if (state is SectionEmpty<List<Program>>) {
@@ -86,8 +86,8 @@ class _ProgramsList extends StatelessWidget {
   }
 }
 
-/// The loaded, non-empty programs list: each program with a Register control
-/// that opens its registration entry point (Requirements 7.1, 7.2).
+/// The loaded, non-empty programs list with campaign-style cards and Register
+/// actions (Requirements 7.1, 7.2).
 class _ProgramsLoaded extends StatelessWidget {
   const _ProgramsLoaded({required this.programs, required this.onRegister});
 
@@ -96,37 +96,23 @@ class _ProgramsLoaded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
     return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 8),
       itemCount: programs.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (BuildContext context, int index) {
         final Program program = programs[index];
-        return Row(
-          children: <Widget>[
-            Icon(
-              Icons.event_rounded,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                program.name,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
+        return ProgramCampaignCard(
+          program: program,
+          onRegister: () => onRegister(program),
+          onShare: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Share link for ${program.name} copied.'),
+                behavior: SnackBarBehavior.floating,
               ),
-            ),
-            const SizedBox(width: 12),
-            KioskButton(
-              label: 'Register',
-              icon: Icons.app_registration_rounded,
-              onPressed: () => onRegister(program),
-            ),
-          ],
+            );
+          },
         );
       },
     );

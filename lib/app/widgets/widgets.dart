@@ -1,5 +1,7 @@
 // Barrel file exporting all shared kiosk widgets (Requirement 10.6).
+export 'campaign_card_actions.dart';
 export 'donation_campaign_card.dart';
+export 'program_campaign_card.dart';
 export 'kiosk_button.dart';
 export 'kiosk_destination_scaffold.dart';
 export 'kiosk_header.dart';
