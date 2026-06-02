@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../routes/app_routes.dart';
 import 'kiosk_header.dart';
 import 'kiosk_sidebar.dart';
+import 'kiosk_sidebar_scan_footer.dart';
 
 /// Shared landscape scaffold for the kiosk destination screens — Donate,
 /// Prayers, and Programs (Requirements 5.3, 5.5, 5.6).
@@ -72,6 +73,7 @@ class KioskDestinationScaffold extends StatelessWidget {
             KioskSidebar(
               active: active,
               onSelect: _select,
+              footer: const KioskSidebarScanFooter(),
             ),
 
             // ---- Right: header + content ----

@@ -58,7 +58,7 @@ class KioskSidebar extends StatelessWidget {
     super.key,
     required this.active,
     required this.onSelect,
-    this.width = 260,
+    this.width = 320,
     this.footer,
   });
 

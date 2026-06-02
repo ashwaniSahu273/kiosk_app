@@ -16,7 +16,7 @@ import 'widgets/widgets.dart';
 /// Layout (landscape `Row`):
 ///   ┌──────────────┬──────────────────────────────────────────────────────┐
 ///   │  KioskSidebar│  KioskHeader (+ logout control)                      │
-///   │   (200 px)   ├──────────────────────────────────────────────────────┤
+///   │   (320 px)   ├──────────────────────────────────────────────────────┤
 ///   │              │  Next Prayer       │  Donation Categories            │
 ///   │              │  Available Programs │  Scan to Donate                │
 ///   └──────────────┴──────────────────────────────────────────────────────┘
@@ -74,10 +74,7 @@ class HomeView extends GetView<HomeController> {
             KioskSidebar(
               active: KioskDestination.home,
               onSelect: _select,
-              footer: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SidebarScanToDonateSection(controller: controller),
-              ),
+              footer: const KioskSidebarScanFooter(),
             ),
 
             // ---- Right: header + content ----
@@ -145,52 +142,6 @@ class _LogoutControl extends StatelessWidget {
     );
   }
 }
-
-/// The sidebar footer card for the Scan-to-Donate feature.
-class _SidebarScanToDonateSection extends StatelessWidget {
-  const _SidebarScanToDonateSection({required this.controller});
-
-  final HomeController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return SectionCard(
-      title: 'Scan to Donate',
-      icon: Icons.qr_code_rounded,
-      padding: const EdgeInsets.all(14),
-      expandChild: false,
-      child: _SidebarScanToDonatePanel(controller: controller),
-    );
-  }
-}
-
-/// The sidebar footer panel for the Scan-to-Donate feature.
-class _SidebarScanToDonatePanel extends StatelessWidget {
-  const _SidebarScanToDonatePanel({required this.controller});
-
-  final HomeController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final SectionState<String> state = controller.qr.value;
-
-      return _sectionBody<String>(
-        state: state,
-        shimmerShape: ShimmerShape.qrCard,
-        onRetry: () => controller.retrySection(HomeSection.qr),
-        emptyMessage: 'Scan-to-Donate is unavailable.',
-        wrapInScrollView: false,
-        onLoaded: (String url) => ScanToDonateCard(
-          donationUrl: url,
-          size: 120,
-        ),
-      );
-    });
-  }
-}
-
-// Scan-to-Donate is now in the sidebar footer.
 
 // ---------------------------------------------------------------------------
 // Full-screen error state (Req 12.3, 12.4)
