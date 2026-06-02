@@ -52,6 +52,9 @@ class LoginController extends GetxController {
   /// Inline validation message for the password field, or null when valid.
   final RxnString passwordError = RxnString();
 
+  /// Whether the password field is currently obscured.
+  final RxBool isPasswordObscured = true.obs;
+
   /// Whether an authentication request is currently in progress.
   ///
   /// While true the view shows a loading indicator and disables the submit
@@ -78,6 +81,10 @@ class LoginController extends GetxController {
     if (passwordError.value != null) {
       passwordError.value = null;
     }
+  }
+
+  void togglePasswordVisibility() {
+    isPasswordObscured.value = !isPasswordObscured.value;
   }
 
   /// Validates the form and, when valid, authenticates the administrator.

@@ -145,6 +145,8 @@ class KioskApp extends StatelessWidget {
         title: AppConstants.appName,
         debugShowCheckedModeBanner: false,
         theme: organizationContext.theme.value ?? defaultTheme,
+        defaultTransition: Transition.fadeIn,
+        transitionDuration: const Duration(milliseconds: 200),
         initialRoute: initialRoute,
         getPages: AppPages.pages,
       ),

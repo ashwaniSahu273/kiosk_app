@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../config/app_constants.dart';
 import '../../widgets/widgets.dart';
 import 'login_controller.dart';
+import 'login_validator.dart';
 
 /// The administrator login screen (Requirement 1).
 ///
@@ -14,7 +15,9 @@ import 'login_controller.dart';
 /// credentials hint keeps the seeded Palos/An-Noor demo usable. All transient
 /// messaging is handled by the controller via the `NotificationService`.
 class LoginView extends GetView<LoginController> {
-  const LoginView({super.key});
+  LoginView({super.key});
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -30,20 +33,23 @@ class LoginView extends GetView<LoginController> {
               child: SectionCard(
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      _buildBranding(theme),
-                      const SizedBox(height: 28),
-                      _buildEmailField(),
-                      const SizedBox(height: 18),
-                      _buildPasswordField(),
-                      const SizedBox(height: 28),
-                      _buildSubmitButton(),
-                      const SizedBox(height: 20),
-                      _buildDemoHint(theme),
-                    ],
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        _buildBranding(theme),
+                        const SizedBox(height: 28),
+                        _buildEmailField(),
+                        const SizedBox(height: 18),
+                        _buildPasswordField(),
+                        const SizedBox(height: 28),
+                        _buildSubmitButton(),
+                        const SizedBox(height: 20),
+                        _buildDemoHint(theme),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -99,12 +105,14 @@ class LoginView extends GetView<LoginController> {
       () => KioskTextField(
         label: 'Email',
         controller: controller.emailController,
-        errorText: controller.emailError.value,
         prefixIcon: Icons.email_outlined,
         keyboardType: TextInputType.emailAddress,
         textInputAction: TextInputAction.next,
         enabled: !controller.isSubmitting.value,
         onChanged: controller.onEmailChanged,
+        validator: (String? value) =>
+            LoginValidator.validateEmail((value ?? '').trim()),
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         autofocus: true,
       ),
     );
@@ -118,13 +126,28 @@ class LoginView extends GetView<LoginController> {
       () => KioskTextField(
         label: 'Password',
         controller: controller.passwordController,
-        errorText: controller.passwordError.value,
         prefixIcon: Icons.lock_outline,
-        obscureText: true,
+        obscureText: controller.isPasswordObscured.value,
         textInputAction: TextInputAction.done,
         enabled: !controller.isSubmitting.value,
         onChanged: controller.onPasswordChanged,
-        onSubmitted: (_) => controller.submit(),
+        validator: (String? value) =>
+            LoginValidator.validatePassword(value ?? ''),
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        suffixIcon: IconButton(
+          tooltip: controller.isPasswordObscured.value
+              ? 'Show password'
+              : 'Hide password',
+          onPressed: controller.isSubmitting.value
+              ? null
+              : controller.togglePasswordVisibility,
+          icon: Icon(
+            controller.isPasswordObscured.value
+                ? Icons.visibility_rounded
+                : Icons.visibility_off_rounded,
+          ),
+        ),
+        onSubmitted: (_) => _submit(),
       ),
     );
   }
@@ -139,9 +162,22 @@ class LoginView extends GetView<LoginController> {
         expand: true,
         isLoading: controller.isSubmitting.value,
         isEnabled: !controller.isSubmitting.value,
-        onPressed: controller.submit,
+        onPressed: _submit,
       ),
     );
+  }
+
+  void _submit() {
+    final FormState? form = _formKey.currentState;
+    if (form == null) {
+      controller.submit();
+      return;
+    }
+    final bool ok = form.validate();
+    if (!ok) {
+      return;
+    }
+    controller.submit();
   }
 
   /// Small help text listing the seeded demo credentials so the demo is

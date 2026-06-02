@@ -84,7 +84,7 @@ class HomeView extends GetView<HomeController> {
                   // Header (logo, org name, live date/time) with a logout
                   // control beside it (Req 1.9, 5.1, 5.2).
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       const Expanded(child: KioskHeader()),
                       _LogoutControl(onLogout: _logout),

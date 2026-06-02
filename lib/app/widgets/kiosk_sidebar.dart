@@ -123,7 +123,9 @@ class _SidebarItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
               color: isSelected ? selectedBackground : Colors.transparent,
@@ -136,18 +138,28 @@ class _SidebarItem extends StatelessWidget {
             ),
             child: Row(
               children: <Widget>[
-                Icon(destination.icon, color: foreground, size: 26),
+                TweenAnimationBuilder<Color?>(
+                  tween: ColorTween(end: foreground),
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  builder: (BuildContext context, Color? color, Widget? child) =>
+                      Icon(destination.icon, color: color, size: 26),
+                ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Text(
-                    destination.label,
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
                     style: TextStyle(
                       color: foreground,
                       fontSize: 18,
                       fontWeight:
                           isSelected ? FontWeight.w700 : FontWeight.w500,
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    child: Text(
+                      destination.label,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],

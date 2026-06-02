@@ -14,9 +14,11 @@ class KioskTextField extends StatelessWidget {
     this.controller,
     this.obscureText = false,
     this.validator,
+    this.autovalidateMode = AutovalidateMode.disabled,
     this.errorText,
     this.hintText,
     this.prefixIcon,
+    this.suffixIcon,
     this.keyboardType,
     this.textInputAction,
     this.enabled = true,
@@ -37,6 +39,9 @@ class KioskTextField extends StatelessWidget {
   /// Optional form validator hook. Returns null when valid.
   final FormFieldValidator<String>? validator;
 
+  /// Controls when the [validator] is run.
+  final AutovalidateMode autovalidateMode;
+
   /// Per-field error message; when non-null the field renders in its error
   /// state with this text. Lets a controller drive inline validation
   /// independently of the [Form] validator.
@@ -47,6 +52,9 @@ class KioskTextField extends StatelessWidget {
 
   /// Optional leading icon.
   final IconData? prefixIcon;
+
+  /// Optional trailing widget (e.g. password visibility toggle).
+  final Widget? suffixIcon;
 
   /// Keyboard type (e.g. [TextInputType.emailAddress]).
   final TextInputType? keyboardType;
@@ -81,13 +89,14 @@ class KioskTextField extends StatelessWidget {
       onChanged: onChanged,
       onFieldSubmitted: onSubmitted,
       autofocus: autofocus,
-      autovalidateMode: AutovalidateMode.disabled,
+      autovalidateMode: autovalidateMode,
       style: theme.textTheme.titleMedium,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
         errorText: errorText,
         prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: scheme.surface,
         contentPadding: const EdgeInsets.symmetric(
