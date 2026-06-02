@@ -58,7 +58,8 @@ class KioskSidebar extends StatelessWidget {
     super.key,
     required this.active,
     required this.onSelect,
-    this.width = 200,
+    this.width = 260,
+    this.footer,
   });
 
   /// The currently active destination (the only one shown as selected).
@@ -66,6 +67,9 @@ class KioskSidebar extends StatelessWidget {
 
   /// Invoked with the tapped destination.
   final ValueChanged<KioskDestination> onSelect;
+
+  /// Optional footer displayed at the bottom of the sidebar.
+  final Widget? footer;
 
   /// Fixed sidebar width in logical pixels.
   final double width;
@@ -88,6 +92,10 @@ class KioskSidebar extends StatelessWidget {
               isSelected: destination == active,
               onTap: () => onSelect(destination),
             ),
+          if (footer != null) ...[
+            const Spacer(),
+            footer!,
+          ],
         ],
       ),
     );

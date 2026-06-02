@@ -74,6 +74,10 @@ class HomeView extends GetView<HomeController> {
             KioskSidebar(
               active: KioskDestination.home,
               onSelect: _select,
+              footer: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SidebarScanToDonateSection(controller: controller),
+              ),
             ),
 
             // ---- Right: header + content ----
@@ -141,6 +145,52 @@ class _LogoutControl extends StatelessWidget {
     );
   }
 }
+
+/// The sidebar footer card for the Scan-to-Donate feature.
+class _SidebarScanToDonateSection extends StatelessWidget {
+  const _SidebarScanToDonateSection({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      title: 'Scan to Donate',
+      icon: Icons.qr_code_rounded,
+      padding: const EdgeInsets.all(14),
+      expandChild: false,
+      child: _SidebarScanToDonatePanel(controller: controller),
+    );
+  }
+}
+
+/// The sidebar footer panel for the Scan-to-Donate feature.
+class _SidebarScanToDonatePanel extends StatelessWidget {
+  const _SidebarScanToDonatePanel({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final SectionState<String> state = controller.qr.value;
+
+      return _sectionBody<String>(
+        state: state,
+        shimmerShape: ShimmerShape.qrCard,
+        onRetry: () => controller.retrySection(HomeSection.qr),
+        emptyMessage: 'Scan-to-Donate is unavailable.',
+        wrapInScrollView: false,
+        onLoaded: (String url) => ScanToDonateCard(
+          donationUrl: url,
+          size: 120,
+        ),
+      );
+    });
+  }
+}
+
+// Scan-to-Donate is now in the sidebar footer.
 
 // ---------------------------------------------------------------------------
 // Full-screen error state (Req 12.3, 12.4)
@@ -305,15 +355,14 @@ class _HomeContentGrid extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // ---- Left column ----
           Expanded(
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Flexible(
+                Expanded(
                   child: SectionCard(
                     title: 'Next Prayer',
                     icon: Icons.mosque_rounded,
@@ -321,27 +370,8 @@ class _HomeContentGrid extends StatelessWidget {
                     child: _PrayerSectionContent(controller: controller),
                   ),
                 ),
-                const SizedBox(height: spacing),
-                Flexible(
-                  child: SectionCard(
-                    title: 'Available Programs',
-                    icon: Icons.event_rounded,
-                    expandChild: true,
-                    child: _ProgramsSectionContent(controller: controller),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: spacing),
-
-          // ---- Right column ----
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Flexible(
+                const SizedBox(width: spacing),
+                Expanded(
                   child: SectionCard(
                     title: 'Donation Categories',
                     icon: Icons.volunteer_activism_rounded,
@@ -349,16 +379,16 @@ class _HomeContentGrid extends StatelessWidget {
                     child: _DonationsSectionContent(controller: controller),
                   ),
                 ),
-                const SizedBox(height: spacing),
-                Flexible(
-                  child: SectionCard(
-                    title: 'Scan to Donate',
-                    icon: Icons.qr_code_rounded,
-                    expandChild: true,
-                    child: _QrSectionContent(controller: controller),
-                  ),
-                ),
               ],
+            ),
+          ),
+          const SizedBox(height: spacing),
+          Expanded(
+            child: SectionCard(
+              title: 'Available Programs',
+              icon: Icons.event_rounded,
+              expandChild: true,
+              child: _ProgramsSectionContent(controller: controller),
             ),
           ),
         ],
@@ -421,6 +451,7 @@ class _ProgramsSectionContent extends StatelessWidget {
         shimmerShape: ShimmerShape.programsList,
         onRetry: () => controller.retrySection(HomeSection.programs),
         emptyMessage: 'No programs available.',
+        wrapInScrollView: false,
         onLoaded: (List<Program> programs) => ProgramsSection(
           programs: programs,
         ),
@@ -499,30 +530,6 @@ class _DonationsEmptyState extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-/// Scan-to-Donate section: the donation URL as text plus a placeholder box.
-/// Task 15 swaps the placeholder for a `qr_flutter` QR (Requirements 9.1, 9.2,
-/// 13.1, 13.3).
-class _QrSectionContent extends StatelessWidget {
-  const _QrSectionContent({required this.controller});
-
-  final HomeController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final SectionState<String> state = controller.qr.value;
-
-      return _sectionBody<String>(
-        state: state,
-        shimmerShape: ShimmerShape.qrCard,
-        onRetry: () => controller.retrySection(HomeSection.qr),
-        emptyMessage: 'Scan-to-Donate is unavailable.',
-        onLoaded: (String url) => ScanToDonateCard(donationUrl: url),
-      );
-    });
   }
 }
 
