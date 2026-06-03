@@ -37,19 +37,21 @@ class KioskTwoColumnCardGrid extends StatelessWidget {
           padding: EdgeInsets.only(
             bottom: rowIndex == rowCount - 1 ? 0 : mainAxisSpacing,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                child: itemBuilder(context, leftIndex),
-              ),
-              SizedBox(width: crossAxisSpacing),
-              Expanded(
-                child: rightIndex == null
-                    ? const SizedBox.shrink()
-                    : itemBuilder(context, rightIndex),
-              ),
-            ],
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                  child: itemBuilder(context, leftIndex),
+                ),
+                SizedBox(width: crossAxisSpacing),
+                Expanded(
+                  child: rightIndex == null
+                      ? const SizedBox.shrink()
+                      : itemBuilder(context, rightIndex),
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -48,82 +48,14 @@ class ProgramsSection extends StatelessWidget {
         final Program program = programs[index];
         return SizedBox(
           width: 280,
-          child: _ProgramCard(
+          child: ProgramCampaignCard(
             program: program,
+            compact: true,
+            onTap: () => Get.toNamed<void>(AppRoutes.programs, arguments: program),
             onRegister: () => _register(program),
           ),
         );
       },
-    );
-  }
-}
-
-class _ProgramCard extends StatelessWidget {
-  const _ProgramCard({
-    required this.program,
-    required this.onRegister,
-  });
-
-  final Program program;
-  final VoidCallback onRegister;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme scheme = theme.colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Icon(Icons.event_available_rounded,
-                    color: scheme.primary, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    program.name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Register for this program to join the next available session.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurface.withValues(alpha: 0.70),
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const Spacer(),
-            KioskButton(
-              label: 'Register',
-              icon: Icons.app_registration_rounded,
-              onPressed: onRegister,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

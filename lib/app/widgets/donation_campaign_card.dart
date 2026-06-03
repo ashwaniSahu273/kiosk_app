@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/data/models/models.dart';
 import 'campaign_card_actions.dart';
+import 'campaign_card_frame.dart';
+import 'campaign_card_hero.dart';
+import 'campaign_tag_badge.dart';
+import 'campaign_visuals.dart';
 
 /// A donation campaign card matching the donation-list design: hero image,
 /// tag chip, title, description, funding progress, and Share / Donate actions.
@@ -10,12 +14,14 @@ class DonationCampaignCard extends StatelessWidget {
     super.key,
     required this.category,
     required this.onDonate,
+    this.onTap,
     this.onShare,
     this.compact = false,
   });
 
   final DonationCategory category;
   final VoidCallback onDonate;
+  final VoidCallback? onTap;
   final VoidCallback? onShare;
   final bool compact;
 
@@ -25,202 +31,152 @@ class DonationCampaignCard extends StatelessWidget {
     final ColorScheme scheme = theme.colorScheme;
     final double progress = category.fundingProgress;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+    final Widget body = Padding(
+      padding: EdgeInsets.all(compact ? 10 : 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text(
+            category.name,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          if (compact)
+            Text(
+              category.displayDescription,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurface.withValues(alpha: 0.65),
+                height: 1.35,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
+          else
+            Expanded(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  category.displayDescription,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurface.withValues(alpha: 0.65),
+                    height: 1.35,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          if (!compact) ...<Widget>[
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor: scheme.outline.withValues(alpha: 0.25),
+                color: scheme.primary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: <Widget>[
+                Text(
+                  '${(progress * 100).round()}%',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface.withValues(alpha: 0.55),
+                  ),
+                ),
+                const Spacer(),
+                Flexible(
+                  child: Text(
+                    'Raised ${category.formattedRaised} • Goal ${category.formattedGoal}',
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: scheme.onSurface.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          SizedBox(height: compact ? 10 : 16),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: CampaignCardActions.share(
+                  compact: compact,
+                  onPressed: onShare ?? () {},
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: CampaignCardActions.donate(
+                  compact: compact,
+                  onPressed: onDonate,
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+
+    final Widget card = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+      children: <Widget>[
+        _CampaignHero(category: category, compact: compact, scheme: scheme),
+        if (compact) body else Expanded(child: body),
+      ],
+    );
+
+    return CampaignCardFrame(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _CampaignHero(category: category, compact: compact),
-            Padding(
-              padding: EdgeInsets.all(compact ? 10 : 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Text(
-                    category.name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      height: 1.25,
-                    ),
-                    maxLines: compact ? 2 : 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    category.displayDescription,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurface.withValues(alpha: 0.65),
-                      height: 1.35,
-                    ),
-                    maxLines: compact ? 2 : 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (!compact) ...<Widget>[
-                    const SizedBox(height: 14),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 6,
-                        backgroundColor: scheme.outline.withValues(alpha: 0.25),
-                        color: scheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          '${(progress * 100).round()}%',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: scheme.onSurface.withValues(alpha: 0.55),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          'Raised ${category.formattedRaised} • Goal ${category.formattedGoal}',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: scheme.onSurface.withValues(alpha: 0.55),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  SizedBox(height: compact ? 10 : 16),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: CampaignCardActions.share(
-                          compact: compact,
-                          onPressed: onShare ?? () {},
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: CampaignCardActions.donate(
-                          compact: compact,
-                          onPressed: onDonate,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+        child: onTap == null
+            ? card
+            : Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(16),
+                  child: card,
+                ),
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
 }
 
 class _CampaignHero extends StatelessWidget {
-  const _CampaignHero({required this.category, required this.compact});
+  const _CampaignHero({
+    required this.category,
+    required this.compact,
+    required this.scheme,
+  });
 
   final DonationCategory category;
   final bool compact;
+  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    final List<Color> gradient = _heroGradient(category.id, scheme);
-
-    return SizedBox(
+    return CampaignCardHero(
+      imageUrl: category.imageUrl,
       height: compact ? 88 : 160,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradient,
-              ),
-            ),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: Icon(
-                  _heroIcon(category.id),
-                  size: compact ? 48 : 72,
-                  color: Colors.white.withValues(alpha: 0.35),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 12,
-            top: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  const Icon(
-                    Icons.favorite_rounded,
-                    size: 14,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    category.tagLabel,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+      gradientColors: CampaignVisuals.donationGradient(category.id, scheme),
+      fallbackIcon: CampaignVisuals.donationIcon(category.id),
+      badge: CampaignTagBadge(
+        label: category.tagLabel,
+        icon: Icons.favorite_rounded,
       ),
     );
-  }
-
-  static List<Color> _heroGradient(String id, ColorScheme scheme) {
-    if (id.contains('zakat')) {
-      return <Color>[const Color(0xFF1B5E20), const Color(0xFF43A047)];
-    }
-    if (id.contains('sadaqah') || id.contains('general')) {
-      return <Color>[const Color(0xFFC62828), const Color(0xFFE53935)];
-    }
-    if (id.contains('maintenance') || id.contains('building')) {
-      return <Color>[const Color(0xFF4E342E), const Color(0xFF8D6E63)];
-    }
-    return <Color>[scheme.primary, scheme.secondary];
-  }
-
-  static IconData _heroIcon(String id) {
-    if (id.contains('zakat')) {
-      return Icons.mosque_rounded;
-    }
-    if (id.contains('sadaqah') || id.contains('general')) {
-      return Icons.volunteer_activism_rounded;
-    }
-    if (id.contains('maintenance') || id.contains('building')) {
-      return Icons.home_work_rounded;
-    }
-    return Icons.favorite_rounded;
   }
 }

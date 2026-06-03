@@ -59,8 +59,10 @@ class ProgramsController extends GetxController {
   final Rx<SectionState<List<Program>>> programs =
       Rx<SectionState<List<Program>>>(const SectionLoading<List<Program>>());
 
-  /// The program whose registration entry point is currently shown, or null
-  /// when the screen is showing the full list (sidebar entry).
+  /// Program detail screen, or null when showing the grid list.
+  final Rxn<Program> detailProgram = Rxn<Program>();
+
+  /// Registration form for [detailProgram] (or a direct register shortcut).
   final Rxn<Program> selectedProgram = Rxn<Program>();
 
   @override
@@ -68,7 +70,7 @@ class ProgramsController extends GetxController {
     super.onInit();
     final Object? argument = _resolveArgument();
     if (argument is Program) {
-      selectedProgram.value = argument;
+      detailProgram.value = argument;
     }
     load();
   }
@@ -104,12 +106,27 @@ class ProgramsController extends GetxController {
         : SectionLoaded<List<Program>>(items);
   }
 
-  /// Opens the registration entry point for [program] (Requirement 7.2).
-  void selectProgram(Program program) {
-    selectedProgram.value = program;
+  /// Opens the detail screen for [program].
+  void openProgramDetail(Program program) {
+    detailProgram.value = program;
+    selectedProgram.value = null;
   }
 
-  /// Returns from a program's registration entry point to the full list.
+  /// Closes the detail screen and returns to the grid list.
+  void clearDetail() {
+    detailProgram.value = null;
+  }
+
+  /// Opens registration for the program being viewed (Requirement 7.2).
+  void startRegistration([Program? program]) {
+    final Program? target = program ?? detailProgram.value;
+    if (target == null) {
+      return;
+    }
+    selectedProgram.value = target;
+  }
+
+  /// Returns from registration to the detail screen (or list if no detail).
   void clearSelection() {
     selectedProgram.value = null;
   }
@@ -125,6 +142,7 @@ class ProgramsController extends GetxController {
       'Registered $name for $programName. A confirmation was sent to $email.',
     );
     clearSelection();
+    clearDetail();
   }
 
   List<Program>? _retained() {

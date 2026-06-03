@@ -42,6 +42,7 @@ class DonationsSection extends StatelessWidget {
           child: DonationCampaignCard(
             category: category,
             compact: true,
+            onTap: () => Get.toNamed<void>(AppRoutes.donate, arguments: category),
             onDonate: () => _donate(category),
             onShare: () {
               ScaffoldMessenger.of(context).showSnackBar(

@@ -6,6 +6,7 @@ import '../../widgets/widgets.dart';
 import '../auth/login_validator.dart';
 import '../home/section_state.dart';
 import 'programs_controller.dart';
+import 'widgets/program_detail_panel.dart';
 
 /// The organization-scoped Programs destination screen (Requirement 7.2).
 ///
@@ -30,11 +31,29 @@ class ProgramsView extends GetView<ProgramsController> {
       active: KioskDestination.programs,
       child: Obx(() {
         final Program? selected = controller.selectedProgram.value;
+        final Program? detail = controller.detailProgram.value;
+
         if (selected != null) {
           return _ProgramRegistrationPanel(
             program: selected,
             onCancel: controller.clearSelection,
             onSubmit: controller.confirmRegistration,
+            backLabel: detail != null ? 'Back' : 'All programs',
+          );
+        }
+        if (detail != null) {
+          return ProgramDetailPanel(
+            program: detail,
+            onBack: controller.clearDetail,
+            onRegister: controller.startRegistration,
+            onShare: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Share link for ${detail.name} copied.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
           );
         }
         return _ProgramsList(controller: controller);
@@ -77,7 +96,8 @@ class _ProgramsList extends StatelessWidget {
         if (state is SectionLoaded<List<Program>>) {
           return _ProgramsLoaded(
             programs: state.data,
-            onRegister: controller.selectProgram,
+            onOpenDetail: controller.openProgramDetail,
+            onRegister: controller.startRegistration,
           );
         }
         return const SizedBox.shrink();
@@ -89,19 +109,26 @@ class _ProgramsList extends StatelessWidget {
 /// The loaded, non-empty programs list with campaign-style cards and Register
 /// actions (Requirements 7.1, 7.2).
 class _ProgramsLoaded extends StatelessWidget {
-  const _ProgramsLoaded({required this.programs, required this.onRegister});
+  const _ProgramsLoaded({
+    required this.programs,
+    required this.onOpenDetail,
+    required this.onRegister,
+  });
 
   final List<Program> programs;
+  final ValueChanged<Program> onOpenDetail;
   final ValueChanged<Program> onRegister;
 
   @override
   Widget build(BuildContext context) {
-    return KioskTwoColumnCardGrid(
-      itemCount: programs.length,
-      itemBuilder: (BuildContext context, int index) {
+    return CampaignListCanvas(
+      child: KioskTwoColumnCardGrid(
+        itemCount: programs.length,
+        itemBuilder: (BuildContext context, int index) {
         final Program program = programs[index];
         return ProgramCampaignCard(
           program: program,
+          onTap: () => onOpenDetail(program),
           onRegister: () => onRegister(program),
           onShare: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +139,8 @@ class _ProgramsLoaded extends StatelessWidget {
             );
           },
         );
-      },
+        },
+      ),
     );
   }
 }
@@ -195,11 +223,13 @@ class _ProgramRegistrationPanel extends StatefulWidget {
     required this.program,
     required this.onCancel,
     required this.onSubmit,
+    required this.backLabel,
   });
 
   final Program program;
   final VoidCallback onCancel;
   final void Function({required String name, required String email}) onSubmit;
+  final String backLabel;
 
   @override
   State<_ProgramRegistrationPanel> createState() =>
@@ -248,7 +278,7 @@ class _ProgramRegistrationPanelState extends State<_ProgramRegistrationPanel> {
       icon: Icons.app_registration_rounded,
       expandChild: true,
       action: KioskButton(
-        label: 'All programs',
+        label: widget.backLabel,
         icon: Icons.arrow_back_rounded,
         variant: KioskButtonVariant.secondary,
         onPressed: widget.onCancel,

@@ -61,8 +61,10 @@ class DonateController extends GetxController {
     const SectionLoading<List<DonationCategory>>(),
   );
 
-  /// The category whose donation entry point is currently shown, or null when
-  /// the screen is showing the full list (sidebar entry).
+  /// Campaign detail screen, or null when showing the grid list.
+  final Rxn<DonationCategory> detailCategory = Rxn<DonationCategory>();
+
+  /// Donation amount flow for [detailCategory].
   final Rxn<DonationCategory> selectedCategory = Rxn<DonationCategory>();
 
   @override
@@ -70,7 +72,7 @@ class DonateController extends GetxController {
     super.onInit();
     final Object? argument = _resolveArgument();
     if (argument is DonationCategory) {
-      selectedCategory.value = argument;
+      detailCategory.value = argument;
     }
     load();
   }
@@ -107,12 +109,27 @@ class DonateController extends GetxController {
         : SectionLoaded<List<DonationCategory>>(items);
   }
 
-  /// Opens the donation entry point for [category] (Requirement 8.2).
-  void selectCategory(DonationCategory category) {
-    selectedCategory.value = category;
+  /// Opens the detail screen for [category].
+  void openCategoryDetail(DonationCategory category) {
+    detailCategory.value = category;
+    selectedCategory.value = null;
   }
 
-  /// Returns from a category's donation entry point to the full list.
+  /// Closes the detail screen and returns to the grid list.
+  void clearDetail() {
+    detailCategory.value = null;
+  }
+
+  /// Opens the donate flow for the category being viewed (Requirement 8.2).
+  void startDonation([DonationCategory? category]) {
+    final DonationCategory? target = category ?? detailCategory.value;
+    if (target == null) {
+      return;
+    }
+    selectedCategory.value = target;
+  }
+
+  /// Returns from the donate flow to the detail screen (or list if no detail).
   void clearSelection() {
     selectedCategory.value = null;
   }
@@ -128,6 +145,7 @@ class DonateController extends GetxController {
       'Thank you! A \$$amount donation to $categoryName was recorded.',
     );
     clearSelection();
+    clearDetail();
   }
 
   List<DonationCategory>? _retained() {

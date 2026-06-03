@@ -5,6 +5,7 @@ import '../../core/data/models/models.dart';
 import '../../widgets/widgets.dart';
 import '../home/section_state.dart';
 import 'donate_controller.dart';
+import 'widgets/donation_detail_panel.dart';
 
 /// The organization-scoped Donate destination screen (Requirement 8.2).
 ///
@@ -29,11 +30,29 @@ class DonateView extends GetView<DonateController> {
       active: KioskDestination.donate,
       child: Obx(() {
         final DonationCategory? selected = controller.selectedCategory.value;
+        final DonationCategory? detail = controller.detailCategory.value;
+
         if (selected != null) {
           return _DonationPanel(
             category: selected,
             onCancel: controller.clearSelection,
             onDonate: controller.confirmDonation,
+            backLabel: detail != null ? 'Back' : 'All campaigns',
+          );
+        }
+        if (detail != null) {
+          return DonationDetailPanel(
+            category: detail,
+            onBack: controller.clearDetail,
+            onDonate: controller.startDonation,
+            onShare: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Share link for ${detail.name} copied.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
           );
         }
         return _DonationCategoriesList(controller: controller);
@@ -77,7 +96,8 @@ class _DonationCategoriesList extends StatelessWidget {
         if (state is SectionLoaded<List<DonationCategory>>) {
           return _DonationsLoaded(
             categories: state.data,
-            onDonate: controller.selectCategory,
+            onOpenDetail: controller.openCategoryDetail,
+            onDonate: controller.startDonation,
           );
         }
         return const SizedBox.shrink();
@@ -89,19 +109,26 @@ class _DonationCategoriesList extends StatelessWidget {
 /// The loaded, non-empty campaigns list with Share / Donate campaign cards
 /// (Requirements 8.1, 8.2).
 class _DonationsLoaded extends StatelessWidget {
-  const _DonationsLoaded({required this.categories, required this.onDonate});
+  const _DonationsLoaded({
+    required this.categories,
+    required this.onOpenDetail,
+    required this.onDonate,
+  });
 
   final List<DonationCategory> categories;
+  final ValueChanged<DonationCategory> onOpenDetail;
   final ValueChanged<DonationCategory> onDonate;
 
   @override
   Widget build(BuildContext context) {
-    return KioskTwoColumnCardGrid(
-      itemCount: categories.length,
-      itemBuilder: (BuildContext context, int index) {
+    return CampaignListCanvas(
+      child: KioskTwoColumnCardGrid(
+        itemCount: categories.length,
+        itemBuilder: (BuildContext context, int index) {
         final DonationCategory category = categories[index];
         return DonationCampaignCard(
           category: category,
+          onTap: () => onOpenDetail(category),
           onDonate: () => onDonate(category),
           onShare: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +139,8 @@ class _DonationsLoaded extends StatelessWidget {
             );
           },
         );
-      },
+        },
+      ),
     );
   }
 }
@@ -204,11 +232,13 @@ class _DonationPanel extends StatefulWidget {
     required this.category,
     required this.onCancel,
     required this.onDonate,
+    required this.backLabel,
   });
 
   final DonationCategory category;
   final VoidCallback onCancel;
   final ValueChanged<int> onDonate;
+  final String backLabel;
 
   @override
   State<_DonationPanel> createState() => _DonationPanelState();
@@ -226,7 +256,7 @@ class _DonationPanelState extends State<_DonationPanel> {
       icon: Icons.volunteer_activism_rounded,
       expandChild: true,
       action: KioskButton(
-        label: 'All categories',
+        label: widget.backLabel,
         icon: Icons.arrow_back_rounded,
         variant: KioskButtonVariant.secondary,
         onPressed: widget.onCancel,

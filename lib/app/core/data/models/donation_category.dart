@@ -119,6 +119,7 @@ class DonationCategory implements OrgOwned {
             id == other.id &&
             name == other.name &&
             description == other.description &&
+            imageUrl == other.imageUrl &&
             tagLabel == other.tagLabel &&
             goalAmount == other.goalAmount &&
             raisedAmount == other.raisedAmount;
@@ -130,6 +131,7 @@ class DonationCategory implements OrgOwned {
         id,
         name,
         description,
+        imageUrl,
         tagLabel,
         goalAmount,
         raisedAmount,
