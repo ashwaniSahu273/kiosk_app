@@ -22,6 +22,9 @@ class DonationCategory implements OrgOwned {
   /// Short campaign copy shown beneath the title on donation list cards.
   final String? description;
 
+  /// Optional hero image URL for list cards.
+  final String? imageUrl;
+
   /// Chip label overlaid on the campaign image (e.g. "Give Hope").
   final String tagLabel;
 
@@ -54,6 +57,7 @@ class DonationCategory implements OrgOwned {
     String? id,
     String? name,
     String? description,
+    String? imageUrl,
     String? tagLabel,
     int? goalAmount,
     int? raisedAmount,
@@ -63,6 +67,7 @@ class DonationCategory implements OrgOwned {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
       tagLabel: tagLabel ?? this.tagLabel,
       goalAmount: goalAmount ?? this.goalAmount,
       raisedAmount: raisedAmount ?? this.raisedAmount,
@@ -75,6 +80,7 @@ class DonationCategory implements OrgOwned {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       tagLabel: json['tagLabel'] as String? ?? 'Give Hope',
       goalAmount: json['goalAmount'] as int? ?? 10000,
       raisedAmount: json['raisedAmount'] as int? ?? 0,
@@ -87,6 +93,7 @@ class DonationCategory implements OrgOwned {
       'id': id,
       'name': name,
       if (description != null) 'description': description,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'tagLabel': tagLabel,
       'goalAmount': goalAmount,
       'raisedAmount': raisedAmount,
