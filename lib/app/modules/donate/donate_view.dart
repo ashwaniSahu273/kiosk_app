@@ -96,10 +96,8 @@ class _DonationsLoaded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 8),
+    return KioskTwoColumnCardGrid(
       itemCount: categories.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (BuildContext context, int index) {
         final DonationCategory category = categories[index];
         return DonationCampaignCard(

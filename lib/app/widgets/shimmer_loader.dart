@@ -27,6 +27,9 @@ enum ShimmerShape {
 
   /// A large square QR placeholder above a short caption bar.
   qrCard,
+
+  /// Prayer-times destination: date chip + table placeholder.
+  prayerTimes,
 }
 
 /// The single, app-wide animated shimmer loading placeholder (Requirement
@@ -84,6 +87,8 @@ class ShimmerLoader extends StatelessWidget {
         return const _DonationCategoriesSkeleton();
       case ShimmerShape.qrCard:
         return const _QrCardSkeleton();
+      case ShimmerShape.prayerTimes:
+        return const _PrayerTimesSkeleton();
     }
   }
 }
@@ -117,7 +122,7 @@ class _Block extends StatelessWidget {
   }
 }
 
-/// Next Prayer on Home: fills section — hero (flex 3) + chip row (flex 2).
+/// Next Prayer on Home: date row + gradient dashboard card.
 class _NextPrayerSkeleton extends StatelessWidget {
   const _NextPrayerSkeleton();
 
@@ -125,23 +130,10 @@ class _NextPrayerSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        const Expanded(flex: 3, child: _Block(radius: 12)),
-        const SizedBox(height: 12),
-        Expanded(
-          flex: 2,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: List<Widget>.generate(5, (int index) {
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: index == 4 ? 0 : 8),
-                  child: const _Block(radius: 12),
-                ),
-              );
-            }),
-          ),
-        ),
+      children: const <Widget>[
+        _Block(width: 280, height: 18, radius: 6),
+        SizedBox(height: 10),
+        Expanded(child: _Block(radius: 16)),
       ],
     );
   }
@@ -250,6 +242,29 @@ class _DonationCategoriesSkeleton extends StatelessWidget {
           ),
         );
       }),
+    );
+  }
+}
+
+/// Prayer-times screen: date chip + expandable table block.
+class _PrayerTimesSkeleton extends StatelessWidget {
+  const _PrayerTimesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: const <Widget>[
+          Align(
+            alignment: Alignment.center,
+            child: _Block(width: 220, height: 36, radius: 20),
+          ),
+          SizedBox(height: 16),
+          Expanded(child: _Block(radius: 16)),
+        ],
+      ),
     );
   }
 }

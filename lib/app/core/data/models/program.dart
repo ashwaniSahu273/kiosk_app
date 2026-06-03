@@ -7,6 +7,8 @@ class Program implements OrgOwned {
     required this.organizationId,
     required this.id,
     required this.name,
+    this.description,
+    this.imageUrl,
   });
 
   @override
@@ -14,15 +16,28 @@ class Program implements OrgOwned {
   final String id;
   final String name;
 
+  /// Short copy for campaign cards.
+  final String? description;
+
+  /// Optional hero image URL for list cards.
+  final String? imageUrl;
+
+  String get displayDescription =>
+      description ?? 'Register for $name and join the next available session.';
+
   Program copyWith({
     String? organizationId,
     String? id,
     String? name,
+    String? description,
+    String? imageUrl,
   }) {
     return Program(
       organizationId: organizationId ?? this.organizationId,
       id: id ?? this.id,
       name: name ?? this.name,
+      description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 
@@ -31,6 +46,8 @@ class Program implements OrgOwned {
       organizationId: json['organizationId'] as String,
       id: json['id'] as String,
       name: json['name'] as String,
+      description: json['description'] as String?,
+      imageUrl: json['imageUrl'] as String?,
     );
   }
 
@@ -39,6 +56,8 @@ class Program implements OrgOwned {
       'organizationId': organizationId,
       'id': id,
       'name': name,
+      if (description != null) 'description': description,
+      if (imageUrl != null) 'imageUrl': imageUrl,
     };
   }
 
@@ -49,11 +68,14 @@ class Program implements OrgOwned {
             runtimeType == other.runtimeType &&
             organizationId == other.organizationId &&
             id == other.id &&
-            name == other.name;
+            name == other.name &&
+            description == other.description &&
+            imageUrl == other.imageUrl;
   }
 
   @override
-  int get hashCode => Object.hash(organizationId, id, name);
+  int get hashCode =>
+      Object.hash(organizationId, id, name, description, imageUrl);
 
   @override
   String toString() =>

@@ -8,6 +8,7 @@ class DonationCategory implements OrgOwned {
     required this.id,
     required this.name,
     this.description,
+    this.imageUrl,
     this.tagLabel = 'Give Hope',
     this.goalAmount = 10000,
     this.raisedAmount = 0,

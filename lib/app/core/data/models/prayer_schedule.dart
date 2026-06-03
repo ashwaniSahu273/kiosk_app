@@ -1,3 +1,4 @@
+import 'friday_prayer_event.dart';
 import 'org_owned.dart';
 import 'prayer_time.dart';
 
@@ -8,6 +9,7 @@ class PrayerSchedule implements OrgOwned {
     required this.organizationId,
     required this.date,
     required this.prayers,
+    this.fridayEvents = const <FridayPrayerEvent>[],
   });
 
   @override
@@ -15,15 +17,20 @@ class PrayerSchedule implements OrgOwned {
   final DateTime date;
   final List<PrayerTime> prayers;
 
+  /// Optional Friday (Jumu'ah) program times for the Today's tab.
+  final List<FridayPrayerEvent> fridayEvents;
+
   PrayerSchedule copyWith({
     String? organizationId,
     DateTime? date,
     List<PrayerTime>? prayers,
+    List<FridayPrayerEvent>? fridayEvents,
   }) {
     return PrayerSchedule(
       organizationId: organizationId ?? this.organizationId,
       date: date ?? this.date,
       prayers: prayers ?? this.prayers,
+      fridayEvents: fridayEvents ?? this.fridayEvents,
     );
   }
 
@@ -35,6 +42,14 @@ class PrayerSchedule implements OrgOwned {
           .map((dynamic e) =>
               PrayerTime.fromJson(e as Map<String, dynamic>))
           .toList(),
+      fridayEvents: (json['fridayEvents'] as List<dynamic>?)
+              ?.map(
+                (dynamic e) => FridayPrayerEvent.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
+              .toList() ??
+          const <FridayPrayerEvent>[],
     );
   }
 
@@ -43,6 +58,9 @@ class PrayerSchedule implements OrgOwned {
       'organizationId': organizationId,
       'date': date.toIso8601String(),
       'prayers': prayers.map((PrayerTime p) => p.toJson()).toList(),
+      if (fridayEvents.isNotEmpty)
+        'fridayEvents':
+            fridayEvents.map((FridayPrayerEvent e) => e.toJson()).toList(),
     };
   }
 
@@ -53,7 +71,8 @@ class PrayerSchedule implements OrgOwned {
             runtimeType == other.runtimeType &&
             organizationId == other.organizationId &&
             date == other.date &&
-            _listEquals(prayers, other.prayers);
+            _listEquals(prayers, other.prayers) &&
+            _fridayListEquals(fridayEvents, other.fridayEvents);
   }
 
   @override
@@ -61,6 +80,7 @@ class PrayerSchedule implements OrgOwned {
         organizationId,
         date,
         Object.hashAll(prayers),
+        Object.hashAll(fridayEvents),
       );
 
   @override
@@ -70,6 +90,15 @@ class PrayerSchedule implements OrgOwned {
 }
 
 bool _listEquals(List<PrayerTime> a, List<PrayerTime> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (int i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+bool _fridayListEquals(List<FridayPrayerEvent> a, List<FridayPrayerEvent> b) {
   if (identical(a, b)) return true;
   if (a.length != b.length) return false;
   for (int i = 0; i < a.length; i++) {

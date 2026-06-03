@@ -9,5 +9,6 @@ export 'kiosk_loader.dart';
 export 'kiosk_sidebar.dart';
 export 'kiosk_sidebar_scan_footer.dart';
 export 'kiosk_text_field.dart';
+export 'kiosk_two_column_card_grid.dart';
 export 'section_card.dart';
 export 'shimmer_loader.dart';

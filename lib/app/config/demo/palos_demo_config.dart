@@ -76,6 +76,40 @@ const String kMasjidAnNoorOrganizationId = 'an-noor';
 /// next-prayer countdown; the date anchors the schedule for display.
 final DateTime _demoScheduleDate = DateTime(2024, 1, 1);
 
+/// Canonical demo salah rows (Athan + Iqamah) for the prayer-times screens.
+const List<PrayerTime> kDemoSalahTemplate = <PrayerTime>[
+  PrayerTime(name: 'Fajr', minutesSinceMidnight: 330, iqamahMinutesSinceMidnight: 345),
+  PrayerTime(name: 'Sunrise', minutesSinceMidnight: 390),
+  PrayerTime(name: 'Dhuhr', minutesSinceMidnight: 770, iqamahMinutesSinceMidnight: 785),
+  PrayerTime(name: 'Asr', minutesSinceMidnight: 945, iqamahMinutesSinceMidnight: 960),
+  PrayerTime(
+    name: 'Maghrib',
+    minutesSinceMidnight: 1095,
+    iqamahMinutesSinceMidnight: 1110,
+  ),
+  PrayerTime(name: 'Isha', minutesSinceMidnight: 1185, iqamahMinutesSinceMidnight: 1200),
+];
+
+/// Slightly earlier times for the second demo organization.
+const List<PrayerTime> kDemoSalahTemplateAnnoor = <PrayerTime>[
+  PrayerTime(name: 'Fajr', minutesSinceMidnight: 315, iqamahMinutesSinceMidnight: 330),
+  PrayerTime(name: 'Sunrise', minutesSinceMidnight: 375),
+  PrayerTime(name: 'Dhuhr', minutesSinceMidnight: 780, iqamahMinutesSinceMidnight: 795),
+  PrayerTime(name: 'Asr', minutesSinceMidnight: 990, iqamahMinutesSinceMidnight: 1005),
+  PrayerTime(
+    name: 'Maghrib',
+    minutesSinceMidnight: 1140,
+    iqamahMinutesSinceMidnight: 1155,
+  ),
+  PrayerTime(name: 'Isha', minutesSinceMidnight: 1230, iqamahMinutesSinceMidnight: 1245),
+];
+
+const List<FridayPrayerEvent> kDemoFridayEvents = <FridayPrayerEvent>[
+  FridayPrayerEvent(name: 'Dars Al Jumah', minutesSinceMidnight: 750),
+  FridayPrayerEvent(name: 'First Khutbah', minutesSinceMidnight: 780),
+  FridayPrayerEvent(name: 'Second Khutbah', minutesSinceMidnight: 855),
+];
+
 /// The seeded Palos organization data set (the primary Demo_Configuration).
 ///
 /// Uses the palos-new reference palette (Requirement 4.7) and provides a full
@@ -103,13 +137,8 @@ final OrganizationData palosOrganizationData = OrganizationData(
   prayerSchedule: PrayerSchedule(
     organizationId: kPalosOrganizationId,
     date: _demoScheduleDate,
-    prayers: const <PrayerTime>[
-      PrayerTime(name: 'Fajr', minutesSinceMidnight: 330), // 5:30 AM
-      PrayerTime(name: 'Dhuhr', minutesSinceMidnight: 750), // 12:30 PM
-      PrayerTime(name: 'Asr', minutesSinceMidnight: 945), // 3:45 PM
-      PrayerTime(name: 'Maghrib', minutesSinceMidnight: 1095), // 6:15 PM
-      PrayerTime(name: 'Isha', minutesSinceMidnight: 1185), // 7:45 PM
-    ],
+    prayers: kDemoSalahTemplate,
+    fridayEvents: kDemoFridayEvents,
   ),
   programs: const <Program>[
     Program(
@@ -205,13 +234,8 @@ final OrganizationData masjidAnNoorOrganizationData = OrganizationData(
   prayerSchedule: PrayerSchedule(
     organizationId: kMasjidAnNoorOrganizationId,
     date: _demoScheduleDate,
-    prayers: const <PrayerTime>[
-      PrayerTime(name: 'Fajr', minutesSinceMidnight: 315), // 5:15 AM
-      PrayerTime(name: 'Dhuhr', minutesSinceMidnight: 780), // 1:00 PM
-      PrayerTime(name: 'Asr', minutesSinceMidnight: 990), // 4:30 PM
-      PrayerTime(name: 'Maghrib', minutesSinceMidnight: 1140), // 7:00 PM
-      PrayerTime(name: 'Isha', minutesSinceMidnight: 1230), // 8:30 PM
-    ],
+    prayers: kDemoSalahTemplateAnnoor,
+    fridayEvents: kDemoFridayEvents,
   ),
   programs: const <Program>[
     Program(

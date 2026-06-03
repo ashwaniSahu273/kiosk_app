@@ -379,6 +379,7 @@ class _PrayerSectionContent extends StatelessWidget {
           next: next,
           hasCountdown: hasCountdown,
           countdownLabel: countdownLabel,
+          now: controller.now.value,
         );
       }
       if (state is SectionEmpty<PrayerSchedule>) {

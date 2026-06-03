@@ -4,6 +4,7 @@ export 'branding_profile.dart';
 export 'donation_category.dart';
 export 'org_owned.dart';
 export 'organization.dart';
+export 'friday_prayer_event.dart';
 export 'prayer_schedule.dart';
 export 'prayer_time.dart';
 export 'program.dart';

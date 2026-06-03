@@ -3,21 +3,12 @@ import 'package:get/get.dart';
 
 import '../../core/data/models/models.dart';
 import '../../widgets/widgets.dart';
-import '../home/next_prayer_resolver.dart';
 import '../home/section_state.dart';
-import '../home/widgets/widgets.dart';
 import 'prayers_controller.dart';
+import 'widgets/prayer_times_body.dart';
+import 'widgets/prayer_times_header.dart';
 
-/// The organization-scoped Prayers destination screen (Requirements 5.5, 6.x).
-///
-/// Shows the active organization's full prayer schedule with the next upcoming
-/// prayer highlighted and a live countdown (reusing [NextPrayerCard], which
-/// itself uses the resolved [NextPrayerResult] computed by the controller).
-/// Themed consistently with the Home_Screen via the shared
-/// [KioskDestinationScaffold].
-///
-/// Empty or failed loads show the matching empty-state (no countdown, Req 6.5)
-/// or an error message with a Retry control (Req 3.6).
+/// Organization-scoped Prayer Times screen with Today's, Daily, and Monthly tabs.
 class PrayersView extends GetView<PrayersController> {
   const PrayersView({super.key});
 
@@ -25,51 +16,61 @@ class PrayersView extends GetView<PrayersController> {
   Widget build(BuildContext context) {
     return KioskDestinationScaffold(
       active: KioskDestination.prayers,
-      child: SectionCard(
-        title: 'Prayer Schedule',
-        icon: Icons.mosque_rounded,
-        expandChild: true,
-        child: Obx(() {
-          final SectionState<PrayerSchedule> state = controller.schedule.value;
-          // Observe the live clock + resolved next prayer so the countdown
-          // ticks while a schedule is displayed.
-          final NextPrayerResult? next = controller.nextPrayer.value;
-          controller.now.value;
-          final bool hasCountdown = controller.hasCountdown;
-          final String countdownLabel = controller.countdownLabel;
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          PrayerTimesHeader(controller: controller),
+          const SizedBox(height: 12),
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Obx(() {
+                  final SectionState<PrayerSchedule> state =
+                      controller.schedule.value;
 
-          if (state is SectionLoading<PrayerSchedule>) {
-            // Must not wrap in a scroll view: the next-prayer skeleton uses
-            // Expanded and needs bounded height from [SectionCard.expandChild].
-            return const ShimmerLoader(shape: ShimmerShape.nextPrayer);
-          }
-          if (state is SectionEmpty<PrayerSchedule>) {
-            return const _PrayersEmptyState();
-          }
-          if (state is SectionError<PrayerSchedule>) {
-            return _PrayersErrorState(
-              message: state.message,
-              onRetry: controller.load,
-            );
-          }
-          if (state is SectionLoaded<PrayerSchedule>) {
-            return NextPrayerCard(
-              fillHeight: true,
-              schedule: state.data,
-              next: next,
-              hasCountdown: hasCountdown,
-              countdownLabel: countdownLabel,
-            );
-          }
-          return const SizedBox.shrink();
-        }),
+                  if (state is SectionLoading<PrayerSchedule>) {
+                    return const _PrayerTimesLoading();
+                  }
+                  if (state is SectionEmpty<PrayerSchedule>) {
+                    return const _PrayersEmptyState();
+                  }
+                  if (state is SectionError<PrayerSchedule>) {
+                    return _PrayersErrorState(
+                      message: state.message,
+                      onRetry: controller.load,
+                    );
+                  }
+                  if (state is SectionLoaded<PrayerSchedule>) {
+                    return PrayerTimesBody(controller: controller);
+                  }
+                  return const SizedBox.shrink();
+                }),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Empty-state shown when the schedule has no prayers; withholds the countdown
-/// (Requirement 6.5).
+class _PrayerTimesLoading extends StatelessWidget {
+  const _PrayerTimesLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ShimmerLoader(shape: ShimmerShape.prayerTimes);
+  }
+}
+
 class _PrayersEmptyState extends StatelessWidget {
   const _PrayersEmptyState();
 
@@ -101,7 +102,6 @@ class _PrayersEmptyState extends StatelessWidget {
   }
 }
 
-/// Error-state for the prayer schedule with a Retry control (Requirement 3.6).
 class _PrayersErrorState extends StatelessWidget {
   const _PrayersErrorState({required this.message, required this.onRetry});
 
