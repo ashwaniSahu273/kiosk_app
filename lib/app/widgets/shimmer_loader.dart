@@ -117,8 +117,7 @@ class _Block extends StatelessWidget {
   }
 }
 
-/// Next Prayer: a big countdown block above a row of prayer-time chips
-/// (mirrors [NextPrayerCard]).
+/// Next Prayer on Home: fills section — hero (flex 3) + chip row (flex 2).
 class _NextPrayerSkeleton extends StatelessWidget {
   const _NextPrayerSkeleton();
 
@@ -126,23 +125,21 @@ class _NextPrayerSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        // Upcoming prayer name.
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: _Block(width: 160, height: 20),
-        ),
-        const SizedBox(height: 16),
-        // Large countdown block.
-        const _Block(height: 96, radius: 16),
-        const SizedBox(height: 20),
-        // Row of prayer-time chips.
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List<Widget>.generate(
-            5,
-            (_) => const _Block(width: 56, height: 64, radius: 12),
+        const Expanded(flex: 3, child: _Block(radius: 12)),
+        const SizedBox(height: 12),
+        Expanded(
+          flex: 2,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: List<Widget>.generate(5, (int index) {
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: index == 4 ? 0 : 8),
+                  child: const _Block(radius: 12),
+                ),
+              );
+            }),
           ),
         ),
       ],

@@ -39,9 +39,9 @@ class PrayersView extends GetView<PrayersController> {
           final String countdownLabel = controller.countdownLabel;
 
           if (state is SectionLoading<PrayerSchedule>) {
-            return const SingleChildScrollView(
-              child: ShimmerLoader(shape: ShimmerShape.nextPrayer),
-            );
+            // Must not wrap in a scroll view: the next-prayer skeleton uses
+            // Expanded and needs bounded height from [SectionCard.expandChild].
+            return const ShimmerLoader(shape: ShimmerShape.nextPrayer);
           }
           if (state is SectionEmpty<PrayerSchedule>) {
             return const _PrayersEmptyState();
@@ -53,13 +53,12 @@ class PrayersView extends GetView<PrayersController> {
             );
           }
           if (state is SectionLoaded<PrayerSchedule>) {
-            return SingleChildScrollView(
-              child: NextPrayerCard(
-                schedule: state.data,
-                next: next,
-                hasCountdown: hasCountdown,
-                countdownLabel: countdownLabel,
-              ),
+            return NextPrayerCard(
+              fillHeight: true,
+              schedule: state.data,
+              next: next,
+              hasCountdown: hasCountdown,
+              countdownLabel: countdownLabel,
             );
           }
           return const SizedBox.shrink();

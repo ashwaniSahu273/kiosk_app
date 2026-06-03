@@ -369,18 +369,28 @@ class _PrayerSectionContent extends StatelessWidget {
       final bool hasCountdown = controller.hasCountdown;
       final String countdownLabel = controller.countdownLabel;
 
-      return _sectionBody<PrayerSchedule>(
-        state: state,
-        shimmerShape: ShimmerShape.nextPrayer,
-        onRetry: () => controller.retrySection(HomeSection.prayerSchedule),
-        emptyMessage: 'No prayer schedule available.',
-        onLoaded: (PrayerSchedule schedule) => NextPrayerCard(
-          schedule: schedule,
+      if (state is SectionLoading<PrayerSchedule>) {
+        return const ShimmerLoader(shape: ShimmerShape.nextPrayer);
+      }
+      if (state is SectionLoaded<PrayerSchedule>) {
+        return NextPrayerCard(
+          fillHeight: true,
+          schedule: state.data,
           next: next,
           hasCountdown: hasCountdown,
           countdownLabel: countdownLabel,
-        ),
-      );
+        );
+      }
+      if (state is SectionEmpty<PrayerSchedule>) {
+        return const _EmptyState(message: 'No prayer schedule available.');
+      }
+      if (state is SectionError<PrayerSchedule>) {
+        return _ErrorState(
+          message: state.message,
+          onRetry: () => controller.retrySection(HomeSection.prayerSchedule),
+        );
+      }
+      return const SizedBox.shrink();
     });
   }
 }
