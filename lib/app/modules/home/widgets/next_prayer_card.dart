@@ -31,13 +31,9 @@ class NextPrayerCard extends StatelessWidget {
 
     if (fillHeight) {
       if (showCountdown) {
-        return _HomeNextPrayerDashboard(
-          now: now,
-          schedule: schedule,
-          next: resolved,
-        );
+        return _HomeNextPrayerDashboard(schedule: schedule, next: resolved);
       }
-      return _HomeNoCountdownState(now: now);
+      return const _HomeNoCountdownState();
     }
 
     return _CompactNextPrayerCard(
@@ -51,98 +47,138 @@ class NextPrayerCard extends StatelessWidget {
 
 /// Landscape home layout matching the next-prayer mockup.
 class _HomeNextPrayerDashboard extends StatelessWidget {
-  const _HomeNextPrayerDashboard({
-    required this.now,
-    required this.schedule,
-    required this.next,
-  });
+  const _HomeNextPrayerDashboard({required this.schedule, required this.next});
 
-  final DateTime now;
   final PrayerSchedule schedule;
   final NextPrayerResult next;
-
-  static LinearGradient _cardGradient(ColorScheme scheme) {
-    return LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
-      colors: <Color>[
-        scheme.primary,
-        Color.lerp(scheme.primary, scheme.secondary, 0.55) ?? scheme.secondary,
-      ],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme scheme = theme.colorScheme;
     final Duration countdown = next.countdown;
-    final double progress = _countdownProgress(schedule.prayers, next, countdown);
-    final List<PrayerTime> upcoming = _upcomingPrayers(schedule.prayers, next.prayer);
+    final double progress = _countdownProgress(
+      schedule.prayers,
+      next,
+      countdown,
+    );
+    final List<PrayerTime> upcoming = _upcomingPrayers(
+      schedule.prayers,
+      next.prayer,
+    );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _DateTimeStatusRow(now: now),
-        const SizedBox(height: 10),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: DecoratedBox(
-              decoration: BoxDecoration(gradient: _cardGradient(scheme)),
-              child: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  Positioned(
-                    left: -12,
-                    bottom: -8,
-                    child: Icon(
-                      Icons.mosque_rounded,
-                      size: 110,
-                      color: Colors.black.withValues(alpha: 0.22),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Expanded(
-                          flex: 34,
-                          child: _NextPrayerLabel(
-                            prayerName: next.prayer.name,
-                            isNextDay: next.isNextDay,
-                            theme: theme,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 32,
-                          child: _CountdownRing(
-                            countdown: countdown,
-                            progress: progress,
-                            theme: theme,
-                            scheme: scheme,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 34,
-                          child: _UpcomingPrayersList(
-                            prayers: upcoming,
-                            theme: theme,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.14)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          Positioned(
+            left: -54,
+            bottom: -36,
+            child: Icon(
+              Icons.mosque_rounded,
+              size: 278,
+              color: scheme.primary.withValues(alpha: 0.14),
+            ),
+          ),
+          Positioned(
+            left: 28,
+            top: 86,
+            child: Icon(
+              Icons.nightlight_round,
+              size: 54,
+              color: scheme.primary.withValues(alpha: 0.72),
+            ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              width: 330,
+              height: 48,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(58),
+                  bottomRight: Radius.circular(58),
+                ),
+              ),
+              child: Text(
+                'NEXT PRAYER',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: scheme.onPrimary,
+                  fontWeight: FontWeight.w900,
+                  height: 1,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(318, 62, 72, 36),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Expanded(
+                  flex: 46,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          next.prayer.name,
+                          style: theme.textTheme.displayMedium?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w900,
+                            height: 0.98,
+                            fontFamily: 'Georgia',
+                          ),
+                        ),
+                      ),
+                      if (next.isNextDay)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Tomorrow',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: _CountdownRing(
+                          countdown: countdown,
+                          progress: progress,
+                          theme: theme,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 86),
+                SizedBox(
+                  width: 330,
+                  child: _UpcomingPrayersList(prayers: upcoming, theme: theme),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -192,116 +228,30 @@ class _HomeNextPrayerDashboard extends StatelessWidget {
   }
 }
 
-class _DateTimeStatusRow extends StatelessWidget {
-  const _DateTimeStatusRow({required this.now});
-
-  final DateTime now;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final Color muted = theme.colorScheme.onSurface.withValues(alpha: 0.55);
-
-    return Row(
-      children: <Widget>[
-        Icon(Icons.calendar_month_outlined, size: 18, color: muted),
-        const SizedBox(width: 6),
-        Text(
-          formatHeaderDate(now),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: muted,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Icon(Icons.schedule_rounded, size: 18, color: muted),
-        const SizedBox(width: 6),
-        Text(
-          formatTime12h(now.hour * 60 + now.minute),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: muted,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _NextPrayerLabel extends StatelessWidget {
-  const _NextPrayerLabel({
-    required this.prayerName,
-    required this.isNextDay,
-    required this.theme,
-  });
-
-  final String prayerName;
-  final bool isNextDay;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Text(
-          'Next Prayer',
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: Colors.white.withValues(alpha: 0.92),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            prayerName,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              height: 1.05,
-            ),
-          ),
-        ),
-        if (isNextDay)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Tomorrow',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.85),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
 class _CountdownRing extends StatelessWidget {
   const _CountdownRing({
     required this.countdown,
     required this.progress,
     required this.theme,
-    required this.scheme,
   });
 
   final Duration countdown;
   final double progress;
   final ThemeData theme;
-  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
-    const double size = 108;
+    final ColorScheme scheme = theme.colorScheme;
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final double ringSize = math.min(size, constraints.maxHeight - 4);
+        final double maxWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : 230;
+        final double maxHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : 230;
+        final double ringSize = math.min(220, math.min(maxWidth, maxHeight));
 
         return Center(
           child: SizedBox(
@@ -315,23 +265,55 @@ class _CountdownRing extends StatelessWidget {
                   height: ringSize,
                   child: CircularProgressIndicator(
                     value: progress,
-                    strokeWidth: ringSize * 0.09,
-                    backgroundColor: Color.lerp(scheme.primary, Colors.black, 0.45)!
-                        .withValues(alpha: 0.55),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      scheme.onPrimary.withValues(alpha: 0.55),
-                    ),
+                    strokeWidth: ringSize * 0.07,
+                    backgroundColor: scheme.primary.withValues(alpha: 0.18),
+                    valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
                     strokeCap: StrokeCap.round,
                   ),
                 ),
-                Text(
-                  formatCountdownHms(countdown),
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontFeatures: const <FontFeature>[
-                      FontFeature.tabularFigures(),
-                    ],
+                Positioned(
+                  top: ringSize * 0.015,
+                  child: Container(
+                    width: ringSize * 0.09,
+                    height: ringSize * 0.09,
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: scheme.surface, width: 2),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: ringSize * 0.78,
+                  height: ringSize * 0.48,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          formatCountdownHms(countdown),
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w900,
+                            height: 1,
+                            fontFeatures: const <FontFeature>[
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'UNTIL ADHAN',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                            height: 1,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -344,55 +326,84 @@ class _CountdownRing extends StatelessWidget {
 }
 
 class _UpcomingPrayersList extends StatelessWidget {
-  const _UpcomingPrayersList({
-    required this.prayers,
-    required this.theme,
-  });
+  const _UpcomingPrayersList({required this.prayers, required this.theme});
 
   final List<PrayerTime> prayers;
   final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme scheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Text(
-          'Upcoming Prayers',
-          textAlign: TextAlign.right,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: Colors.white.withValues(alpha: 0.92),
-            fontWeight: FontWeight.w500,
-          ),
+        Row(
+          children: <Widget>[
+            Icon(Icons.mosque_rounded, color: scheme.primary, size: 22),
+            const SizedBox(width: 9),
+            Text(
+              'UPCOMING PRAYERS',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
         Expanded(
           child: ListView.separated(
             padding: EdgeInsets.zero,
-            itemCount: prayers.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 6),
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: math.min(4, prayers.length),
+            separatorBuilder: (_, __) => const SizedBox(height: 0),
             itemBuilder: (BuildContext context, int index) {
               final PrayerTime prayer = prayers[index];
-              return Align(
-                alignment: Alignment.centerRight,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+              final bool isNight =
+                  prayer.name.toLowerCase().contains('isha') ||
+                  prayer.name.toLowerCase().contains('fajr');
+              return Container(
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: scheme.outline.withValues(alpha: 0.14),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      isNight
+                          ? Icons.nightlight_round
+                          : Icons.wb_twilight_rounded,
+                      color: scheme.primary,
+                      size: 24,
                     ),
-                    child: Text(
-                      prayer.name,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Text(
+                        prayer.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: scheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
+                    Text(
+                      formatTime12h(prayer.minutesSinceMidnight),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -404,32 +415,28 @@ class _UpcomingPrayersList extends StatelessWidget {
 }
 
 class _HomeNoCountdownState extends StatelessWidget {
-  const _HomeNoCountdownState({required this.now});
-
-  final DateTime now;
+  const _HomeNoCountdownState();
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme scheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _DateTimeStatusRow(now: now),
-        const SizedBox(height: 12),
-        Expanded(
-          child: Center(
-            child: Text(
-              'No upcoming prayer countdown available.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: scheme.onSurface.withValues(alpha: 0.55),
-              ),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.14)),
+      ),
+      child: Center(
+        child: Text(
+          'No upcoming prayer countdown available.',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: scheme.onSurface.withValues(alpha: 0.55),
           ),
         ),
-      ],
+      ),
     );
   }
 }

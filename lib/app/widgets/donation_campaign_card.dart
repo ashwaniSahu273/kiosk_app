@@ -29,6 +29,15 @@ class DonationCampaignCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme scheme = theme.colorScheme;
+
+    if (compact) {
+      return _CompactDonationCampaignCard(
+        category: category,
+        onDonate: onDonate,
+        onTap: onTap,
+      );
+    }
+
     final double progress = category.fundingProgress;
 
     final Widget body = Padding(
@@ -150,6 +159,196 @@ class DonationCampaignCard extends StatelessWidget {
                   child: card,
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _CompactDonationCampaignCard extends StatelessWidget {
+  const _CompactDonationCampaignCard({
+    required this.category,
+    required this.onDonate,
+    this.onTap,
+  });
+
+  final DonationCategory category;
+  final VoidCallback onDonate;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final BorderRadius radius = BorderRadius.circular(8);
+
+    final Widget card = Container(
+      height: 112,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: radius,
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.14)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.07),
+            blurRadius: 9,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: <Widget>[
+          _CompactDonationImage(category: category),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  category.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  category.displayDescription,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurface.withValues(alpha: 0.66),
+                    fontWeight: FontWeight.w500,
+                    height: 1.1,
+                  ),
+                ),
+                const Spacer(),
+                const Row(
+                  children: <Widget>[
+                    _CompactMeta(
+                      icon: Icons.calendar_month_outlined,
+                      label: 'Ongoing',
+                    ),
+                    SizedBox(width: 14),
+                    _CompactMeta(
+                      icon: Icons.monetization_on_outlined,
+                      label: 'Any Amount',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 28,
+                  child: ElevatedButton(
+                    onPressed: onDonate,
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                      foregroundColor: scheme.primary,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(borderRadius: radius),
+                      textStyle: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    child: const Text('Donate'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) {
+      return card;
+    }
+    return Material(
+      color: Colors.transparent,
+      borderRadius: radius,
+      child: InkWell(onTap: onTap, borderRadius: radius, child: card),
+    );
+  }
+}
+
+class _CompactDonationImage extends StatelessWidget {
+  const _CompactDonationImage({required this.category});
+
+  final DonationCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final BorderRadius radius = BorderRadius.circular(6);
+
+    Widget fallback() {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: CampaignVisuals.donationGradient(category.id, scheme),
+          ),
+        ),
+        child: Icon(
+          CampaignVisuals.donationIcon(category.id),
+          color: Colors.white.withValues(alpha: 0.75),
+          size: 38,
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: SizedBox(
+        width: 92,
+        height: 96,
+        child: category.imageUrl == null || category.imageUrl!.isEmpty
+            ? fallback()
+            : Image.network(
+                category.imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => fallback(),
+              ),
+      ),
+    );
+  }
+}
+
+class _CompactMeta extends StatelessWidget {
+  const _CompactMeta({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    return Flexible(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 13, color: scheme.primary),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: scheme.onSurface.withValues(alpha: 0.76),
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

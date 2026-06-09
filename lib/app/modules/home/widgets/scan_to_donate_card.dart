@@ -17,6 +17,7 @@ class ScanToDonateCard extends StatelessWidget {
     required this.donationUrl,
     this.size = 140,
     this.showUrl = true,
+    this.showCaption = true,
   });
 
   /// The active organization's donation URL to encode, or null/blank when no
@@ -28,6 +29,9 @@ class ScanToDonateCard extends StatelessWidget {
 
   /// Whether to show the URL text under the caption (use false for sidebar).
   final bool showUrl;
+
+  /// Whether to show the default scan caption below the QR code.
+  final bool showCaption;
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +55,7 @@ class ScanToDonateCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: scheme.outline.withValues(alpha: 0.30),
-            ),
+            border: Border.all(color: scheme.outline.withValues(alpha: 0.30)),
           ),
           child: QrImageView(
             data: trimmed,
@@ -71,15 +73,17 @@ class ScanToDonateCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Scan to donate',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: scheme.primary,
+        if (showCaption) ...<Widget>[
+          const SizedBox(height: 12),
+          Text(
+            'Scan to donate',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: scheme.primary,
+            ),
           ),
-        ),
+        ],
         if (showUrl) ...<Widget>[
           const SizedBox(height: 4),
           Text(

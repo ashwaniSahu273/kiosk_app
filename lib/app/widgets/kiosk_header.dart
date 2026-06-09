@@ -19,7 +19,7 @@ class KioskHeaderBrand extends StatelessWidget {
     super.key,
     this.organizationContext,
     this.themeEngine,
-    this.logoSize = 56,
+    this.logoSize = 62,
   });
 
   /// Injectable [OrganizationContext]; defaults to the registered singleton.
@@ -39,20 +39,44 @@ class KioskHeaderBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
 
     return Obx(() {
+      _orgContext.active.value;
       final BrandingProfile? branding = _orgContext.branding;
       return Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           _buildLogo(branding),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
           Flexible(
-            child: Text(
-              branding?.displayName ?? '',
-              style: (theme.textTheme.headlineSmall ?? const TextStyle())
-                  .copyWith(fontWeight: FontWeight.w700),
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  branding?.displayName ?? '',
+                  style: (theme.textTheme.headlineMedium ?? const TextStyle())
+                      .copyWith(
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        color: scheme.onSurface,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Faith. Community. Service.',
+                  style: (theme.textTheme.titleMedium ?? const TextStyle())
+                      .copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                        height: 1,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],
@@ -136,10 +160,11 @@ class _KioskHeaderClockState extends State<KioskHeaderClock> {
 
     final TextStyle clockStyle =
         (theme.textTheme.headlineMedium ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w600,
-      fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-    );
-    final TextStyle dateStyle = theme.textTheme.titleMedium ??
+          fontWeight: FontWeight.w600,
+          fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+        );
+    final TextStyle dateStyle =
+        theme.textTheme.titleMedium ??
         const TextStyle(fontWeight: FontWeight.w500);
 
     return Column(
@@ -224,14 +249,17 @@ class KioskHeader extends StatelessWidget {
     final ColorScheme scheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
       decoration: BoxDecoration(
         color: scheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.14)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -244,9 +272,160 @@ class KioskHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          KioskHeaderClock(clock: clock),
+          _KioskHeaderStatusStrip(clock: clock),
         ],
       ),
     );
+  }
+}
+
+class _KioskHeaderStatusStrip extends StatefulWidget {
+  const _KioskHeaderStatusStrip({this.clock});
+
+  final DateTime Function()? clock;
+
+  @override
+  State<_KioskHeaderStatusStrip> createState() =>
+      _KioskHeaderStatusStripState();
+}
+
+class _KioskHeaderStatusStripState extends State<_KioskHeaderStatusStrip> {
+  static const Duration _tick = Duration(seconds: 1);
+
+  Timer? _timer;
+  late DateTime _now;
+
+  DateTime Function() get _clock => widget.clock ?? DateTime.now;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = _clock();
+    _timer = Timer.periodic(_tick, (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _now = _clock());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final Color textColor = scheme.onSurface;
+    final TextStyle statusStyle =
+        (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+        );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        _HeaderMetric(
+          icon: Icons.calendar_month_outlined,
+          label: _formatCompactDate(_now),
+          style: statusStyle,
+        ),
+        _HeaderDivider(),
+        _HeaderMetric(
+          icon: Icons.schedule_rounded,
+          label: _KioskHeaderClockState.formatTime(_now),
+          style: statusStyle,
+        ),
+        const SizedBox(width: 78),
+        _HeaderIcon(icon: Icons.wifi_rounded, color: textColor),
+        const SizedBox(width: 24),
+        _HeaderIcon(icon: Icons.volume_up_rounded, color: textColor),
+        const SizedBox(width: 24),
+        _HeaderIcon(icon: Icons.settings_outlined, color: textColor),
+      ],
+    );
+  }
+
+  static String _formatCompactDate(DateTime date) {
+    const List<String> weekdays = <String>[
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    const List<String> months = <String>[
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${weekdays[date.weekday - 1]}, '
+        '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}, '
+        '${date.year}';
+  }
+}
+
+class _HeaderMetric extends StatelessWidget {
+  const _HeaderMetric({
+    required this.icon,
+    required this.label,
+    required this.style,
+  });
+
+  final IconData icon;
+  final String label;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, size: 22, color: style.color),
+        const SizedBox(width: 10),
+        Text(label, style: style),
+      ],
+    );
+  }
+}
+
+class _HeaderDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 28,
+      margin: const EdgeInsets.symmetric(horizontal: 22),
+      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.42),
+    );
+  }
+}
+
+class _HeaderIcon extends StatelessWidget {
+  const _HeaderIcon({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(icon, size: 26, color: color);
   }
 }

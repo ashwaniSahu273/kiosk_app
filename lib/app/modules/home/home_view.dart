@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -18,10 +20,9 @@ import 'widgets/widgets.dart';
 ///   ┌────────────────────────────────────────────────────────────────────┐
 ///   │  KioskTopNavBar (logo · nav pills · clock · logout)                │
 ///   ├──────────────────────────────────────────────┬─────────────────────┤
-///   │  Next Prayer (hero: countdown + upcoming)    │  Scan to Donate     │
+///   │  Next Prayer hero (countdown + upcoming +    │  Scan to Donate     │
+///   │  today's prayer-time tiles, next highlighted)│                     │
 ///   ├──────────────────────────────────────────────┴─────────────────────┤
-///   │  Today's Prayer Times (tile per prayer, next highlighted)          │
-///   ├────────────────────────────────────────────────────────────────────┤
 ///   │  Donation Categories (horizontal campaign cards)                   │
 ///   ├────────────────────────────────────────────────────────────────────┤
 ///   │  Available Programs (horizontal campaign cards)                    │
@@ -240,11 +241,11 @@ class _SectionRetryRow extends StatelessWidget {
 
 /// The scrollable Home content shown when every required section is resolved.
 ///
-/// Row 1: Next Prayer hero dashboard (countdown + upcoming prayers) with the
-///        Scan-to-Donate QR card beside it.
-/// Row 2: Today's Prayer Times — one tile per prayer, next prayer highlighted.
-/// Row 3: Donation Categories — horizontally scrolling campaign cards.
-/// Row 4: Available Programs — horizontally scrolling campaign cards.
+/// Row 1: Next Prayer hero dashboard (countdown + upcoming prayers + today's
+///        prayer-time tiles, next prayer highlighted) with the Scan-to-Donate
+///        QR card beside it.
+/// Row 2: Donation Categories — horizontally scrolling campaign cards.
+/// Row 3: Available Programs — horizontally scrolling campaign cards.
 ///
 /// Every section gets a comfortable fixed height inside one vertical
 /// [SingleChildScrollView], so the page scrolls smoothly and never overflows.
@@ -253,10 +254,11 @@ class _HomeContentGrid extends StatelessWidget {
 
   final HomeController controller;
 
-  static const double _spacing = 14;
-  static const double _heroHeight = 248;
-  static const double _prayerTimesHeight = 124;
-  static const double _campaignSectionHeight = 332;
+  static const double _spacing = 12;
+  static const double _featuredHeight = 166;
+  static const double _heroHeight = 360;
+  static const double _donationHeight = 184;
+  static const double _footerHeight = 56;
 
   @override
   Widget build(BuildContext context) {
@@ -266,65 +268,534 @@ class _HomeContentGrid extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // ---- Row 1: hero next-prayer dashboard + scan-to-donate ----
+          // ---- Row 1: next prayer dashboard + scan-to-donate actions ----
           SizedBox(
             height: _heroHeight,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Expanded(
-                  child: _PrayerSectionContent(controller: controller),
-                ),
+                Expanded(child: _PrayerSectionContent(controller: controller)),
                 const SizedBox(width: _spacing),
                 SizedBox(
-                  width: 236,
-                  child: SectionCard(
-                    title: 'Scan to Donate',
-                    icon: Icons.qr_code_2_rounded,
-                    expandChild: true,
-                    padding: const EdgeInsets.all(16),
-                    child: _QrSectionContent(controller: controller),
-                  ),
+                  width: 360,
+                  child: _ScanDonatePanel(controller: controller),
                 ),
               ],
             ),
           ),
           const SizedBox(height: _spacing),
 
-          // ---- Row 2: today's prayer times tiles ----
+          // ---- Row 2: featured program cards ----
           SizedBox(
-            height: _prayerTimesHeight,
-            child: SectionCard(
-              title: "Today's Prayer Times",
-              icon: Icons.mosque_rounded,
-              expandChild: true,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              child: _PrayerTimesRow(controller: controller),
+            height: _featuredHeight,
+            child: _HomeSectionFrame(
+              title: 'Featured Programs',
+              icon: Icons.star_rounded,
+              actionLabel: 'View All Programs',
+              onAction: () => Get.toNamed<void>(AppRoutes.programs),
+              child: _FeaturedCampaignsContent(controller: controller),
             ),
           ),
           const SizedBox(height: _spacing),
 
-          // ---- Row 3: donation categories ----
+          // ---- Row 3: donation category tiles ----
           SizedBox(
-            height: _campaignSectionHeight,
-            child: SectionCard(
+            height: _donationHeight,
+            child: _HomeSectionFrame(
               title: 'Donation Categories',
-              icon: Icons.volunteer_activism_rounded,
-              expandChild: true,
-              child: _DonationsSectionContent(controller: controller),
+              icon: Icons.request_quote_outlined,
+              actionLabel: 'View All Categories',
+              onAction: () => Get.toNamed<void>(AppRoutes.donate),
+              child: _DonationCategoriesContent(controller: controller),
             ),
           ),
           const SizedBox(height: _spacing),
 
-          // ---- Row 4: available programs ----
+          const SizedBox(height: _footerHeight, child: _HomeFooter()),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeSectionFrame extends StatelessWidget {
+  const _HomeSectionFrame({
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget child;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        SizedBox(
+          height: 32,
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: scheme.primary.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: Icon(icon, color: scheme.primary, size: 19),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
+              if (actionLabel != null && onAction != null)
+                TextButton(
+                  onPressed: onAction,
+                  style: TextButton.styleFrom(
+                    foregroundColor: scheme.primary,
+                    textStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(actionLabel!),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.arrow_forward_rounded, size: 18),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(child: child),
+      ],
+    );
+  }
+}
+
+class _ScanDonatePanel extends StatelessWidget {
+  const _ScanDonatePanel({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.16)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: <Widget>[
+          Text(
+            'Support Our Community',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurface.withValues(alpha: 0.76),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Scan to Donate',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w800,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final double qrSize = math.max(
+                  62,
+                  math.min(136, constraints.maxHeight - 26),
+                );
+
+                return Obx(() {
+                  final SectionState<String> state = controller.qr.value;
+                  Widget body;
+                  if (state is SectionLoading<String>) {
+                    body = SizedBox.square(
+                      dimension: qrSize,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: scheme.primary,
+                      ),
+                    );
+                  } else if (state is SectionLoaded<String>) {
+                    body = ScanToDonateCard(
+                      donationUrl: state.data,
+                      size: qrSize,
+                      showUrl: false,
+                      showCaption: false,
+                    );
+                  } else if (state is SectionError<String>) {
+                    body = _ErrorState(
+                      message: state.message,
+                      onRetry: () => controller.retrySection(HomeSection.qr),
+                    );
+                  } else {
+                    body = const _EmptyState(
+                      message: 'Scan-to-Donate is unavailable.',
+                    );
+                  }
+                  return _animatedState(
+                    state: state,
+                    child: Center(child: body),
+                  );
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 2.55,
+            children: <Widget>[
+              _QuickActionTile(
+                icon: Icons.volunteer_activism_outlined,
+                label: 'Give\nDonation',
+                onTap: () => Get.toNamed<void>(AppRoutes.donate),
+              ),
+              _QuickActionTile(
+                icon: Icons.schedule_rounded,
+                label: 'Prayer\nTimes',
+                onTap: () => Get.toNamed<void>(AppRoutes.prayers),
+              ),
+              _QuickActionTile(
+                icon: Icons.calendar_month_outlined,
+                label: 'Programs\n& Events',
+                onTap: () => Get.toNamed<void>(AppRoutes.programs),
+              ),
+              _QuickActionTile(
+                icon: Icons.mosque_outlined,
+                label: 'Masjid\nInfo',
+                onTap: () => Get.toNamed<void>(AppRoutes.home),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionTile extends StatelessWidget {
+  const _QuickActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final BorderRadius radius = BorderRadius.circular(10);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: scheme.surface,
+        borderRadius: radius,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(color: scheme.outline.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              children: <Widget>[
+                Icon(icon, color: scheme.primary, size: 28),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DonationCategoriesContent extends StatelessWidget {
+  const _DonationCategoriesContent({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final SectionState<List<DonationCategory>> state =
+          controller.donations.value;
+
+      Widget body;
+      if (state is SectionLoading<List<DonationCategory>>) {
+        body = const ShimmerLoader(shape: ShimmerShape.donationCategories);
+      } else if (state is SectionLoaded<List<DonationCategory>>) {
+        final List<DonationCategory> categories = state.data.take(7).toList();
+        body = ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.zero,
+          itemCount: categories.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (BuildContext context, int index) {
+            final DonationCategory category = categories[index];
+            return SizedBox(
+              width: 184,
+              child: _DonationCategoryTile(category: category),
+            );
+          },
+        );
+      } else if (state is SectionError<List<DonationCategory>>) {
+        body = _ErrorState(
+          message: state.message,
+          onRetry: () => controller.retrySection(HomeSection.donations),
+        );
+      } else {
+        body = const _EmptyState(message: 'No donation categories available.');
+      }
+
+      return _animatedState(state: state, child: body);
+    });
+  }
+}
+
+class _DonationCategoryTile extends StatelessWidget {
+  const _DonationCategoryTile({required this.category});
+
+  final DonationCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final BorderRadius radius = BorderRadius.circular(10);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: scheme.surface,
+        borderRadius: radius,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: () => Get.toNamed<void>(AppRoutes.donate, arguments: category),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(color: scheme.outline.withValues(alpha: 0.14)),
+            ),
+            child: Column(
+              children: <Widget>[
+                Icon(_donationIcon(category), color: scheme.primary, size: 42),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      category.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                        height: 1.12,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 30,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Get.toNamed<void>(
+                      AppRoutes.donate,
+                      arguments: category,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: scheme.primary,
+                      foregroundColor: scheme.onPrimary,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(borderRadius: radius),
+                      textStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    child: const Text('Donate'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _donationIcon(DonationCategory category) {
+    final String text = '${category.id} ${category.name}'.toLowerCase();
+    if (text.contains('zakat')) {
+      return Icons.nightlight_round;
+    }
+    if (text.contains('education') || text.contains('school')) {
+      return Icons.school_outlined;
+    }
+    if (text.contains('building') || text.contains('operations')) {
+      return Icons.mosque_outlined;
+    }
+    if (text.contains('sadaqa') || text.contains('quran')) {
+      return Icons.menu_book_outlined;
+    }
+    if (text.contains('palestine') || text.contains('support')) {
+      return Icons.eco_outlined;
+    }
+    return Icons.volunteer_activism_outlined;
+  }
+}
+
+class _HomeFooter extends StatelessWidget {
+  const _HomeFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        children: <Widget>[
+          Text(
+            'Powered by',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withValues(alpha: 0.62),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Icon(Icons.verified_outlined, color: scheme.primary, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'MOHID',
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: scheme.primary,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 4,
+            ),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: _FooterText(
+              'v20.7.25   |   www.mohid.net   |   1-844-827-5387',
+              scheme: scheme,
+            ),
+          ),
+          const SizedBox(width: 12),
           SizedBox(
-            height: _campaignSectionHeight,
-            child: SectionCard(
-              title: 'Available Programs',
-              icon: Icons.event_rounded,
-              expandChild: true,
-              child: _ProgramsSectionContent(controller: controller),
+            width: 280,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  _PaymentBadge(label: 'VISA', color: Colors.blue.shade700),
+                  _PaymentBadge(label: 'MC', color: Colors.red.shade600),
+                  _PaymentBadge(label: 'AMEX', color: Colors.blue.shade500),
+                  _PaymentBadge(label: 'DISC', color: scheme.onSurface),
+                  _PaymentBadge(label: 'Pay', color: scheme.onSurface),
+                  _PaymentBadge(label: 'G Pay', color: Colors.blue.shade600),
+                ],
+              ),
             ),
           ),
         ],
@@ -333,122 +804,198 @@ class _HomeContentGrid extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Today's prayer times row (tile per prayer, next prayer highlighted)
-// ---------------------------------------------------------------------------
+class _FooterText extends StatelessWidget {
+  const _FooterText(this.text, {required this.scheme});
 
-/// A horizontal row of prayer-time tiles for today's schedule. The resolved
-/// next prayer is highlighted in the theme primary color so visitors can read
-/// the full timetable at a glance beside the hero countdown.
-class _PrayerTimesRow extends StatelessWidget {
-  const _PrayerTimesRow({required this.controller});
+  final String text;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: scheme.onSurface.withValues(alpha: 0.70),
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+}
+
+class _PaymentBadge extends StatelessWidget {
+  const _PaymentBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 10),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _FeaturedCampaignsContent extends StatelessWidget {
+  const _FeaturedCampaignsContent({required this.controller});
 
   final HomeController controller;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final SectionState<PrayerSchedule> state =
-          controller.prayerSchedule.value;
-      final NextPrayerResult? next = controller.nextPrayer.value;
+      final SectionState<List<Program>> programsState =
+          controller.programs.value;
+      final SectionState<List<DonationCategory>> donationsState =
+          controller.donations.value;
 
-      Widget body;
-      if (state is SectionLoading<PrayerSchedule>) {
-        body = const ShimmerLoader(shape: ShimmerShape.prayerTimes);
-      } else if (state is SectionLoaded<PrayerSchedule>) {
-        final List<PrayerTime> prayers =
-            List<PrayerTime>.of(state.data.prayers)
-              ..sort((PrayerTime a, PrayerTime b) =>
-                  a.minutesSinceMidnight.compareTo(b.minutesSinceMidnight));
-        body = Row(
-          children: <Widget>[
-            for (int i = 0; i < prayers.length; i++) ...<Widget>[
-              if (i > 0) const SizedBox(width: 10),
-              Expanded(
-                child: _PrayerTimeTile(
-                  prayer: prayers[i],
-                  isNext: next != null && next.prayer == prayers[i],
-                ),
-              ),
-            ],
-          ],
-        );
-      } else if (state is SectionEmpty<PrayerSchedule>) {
-        body = const _EmptyState(message: 'No prayer schedule available.');
-      } else if (state is SectionError<PrayerSchedule>) {
-        body = _ErrorState(
-          message: state.message,
-          onRetry: () => controller.retrySection(HomeSection.prayerSchedule),
-        );
-      } else {
-        body = const SizedBox.shrink();
+      if (programsState is SectionLoading<List<Program>> ||
+          donationsState is SectionLoading<List<DonationCategory>>) {
+        return const _FeaturedCampaignsSkeleton();
       }
 
-      return _animatedState(state: state, child: body);
+      if (programsState is SectionError<List<Program>>) {
+        return _ErrorState(
+          message: programsState.message,
+          onRetry: () => controller.retrySection(HomeSection.programs),
+        );
+      }
+      if (donationsState is SectionError<List<DonationCategory>>) {
+        return _ErrorState(
+          message: donationsState.message,
+          onRetry: () => controller.retrySection(HomeSection.donations),
+        );
+      }
+
+      final List<Widget> cards = <Widget>[];
+      if (programsState is SectionLoaded<List<Program>>) {
+        for (final Program program in programsState.data.take(3)) {
+          cards.add(
+            ProgramCampaignCard(
+              program: program,
+              compact: true,
+              onTap: () =>
+                  Get.toNamed<void>(AppRoutes.programs, arguments: program),
+              onRegister: () =>
+                  Get.toNamed<void>(AppRoutes.programs, arguments: program),
+            ),
+          );
+        }
+      }
+      if (donationsState is SectionLoaded<List<DonationCategory>>) {
+        for (final DonationCategory category in donationsState.data.take(2)) {
+          cards.add(
+            DonationCampaignCard(
+              category: category,
+              compact: true,
+              onTap: () =>
+                  Get.toNamed<void>(AppRoutes.donate, arguments: category),
+              onDonate: () =>
+                  Get.toNamed<void>(AppRoutes.donate, arguments: category),
+            ),
+          );
+        }
+      }
+
+      if (cards.isEmpty) {
+        return const _EmptyState(message: 'No featured programs available.');
+      }
+
+      return ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        itemCount: cards.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (BuildContext context, int index) {
+          return SizedBox(width: 342, child: cards[index]);
+        },
+      );
     });
   }
 }
 
-/// One prayer tile: the prayer name above its time. The next prayer fills with
-/// the theme primary color; the rest sit on a soft tinted surface.
-class _PrayerTimeTile extends StatelessWidget {
-  const _PrayerTimeTile({required this.prayer, required this.isNext});
-
-  final PrayerTime prayer;
-  final bool isNext;
+class _FeaturedCampaignsSkeleton extends StatelessWidget {
+  const _FeaturedCampaignsSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme scheme = theme.colorScheme;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
 
-    final Color background = isNext
-        ? scheme.primary
-        : scheme.primary.withValues(alpha: 0.06);
-    final Color nameColor = isNext
-        ? scheme.onPrimary.withValues(alpha: 0.92)
-        : scheme.onSurface.withValues(alpha: 0.65);
-    final Color timeColor = isNext ? scheme.onPrimary : scheme.onSurface;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(12),
-        border: isNext
-            ? null
-            : Border.all(color: scheme.primary.withValues(alpha: 0.12)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              prayer.name,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: nameColor,
-                fontWeight: FontWeight.w600,
+    return Row(
+      children: <Widget>[
+        for (int i = 0; i < 4; i++) ...<Widget>[
+          if (i > 0) const SizedBox(width: 12),
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: scheme.outline.withValues(alpha: 0.14),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              formatTime12h(prayer.minutesSinceMidnight),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: timeColor,
-                fontWeight: FontWeight.w700,
-                fontFeatures: const <FontFeature>[
-                  FontFeature.tabularFigures(),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 92,
+                      decoration: BoxDecoration(
+                        color: scheme.outline.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          _SkeletonLine(widthFactor: 0.80, scheme: scheme),
+                          const SizedBox(height: 9),
+                          _SkeletonLine(widthFactor: 0.62, scheme: scheme),
+                          const SizedBox(height: 18),
+                          _SkeletonLine(widthFactor: 0.96, scheme: scheme),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ],
+      ],
+    );
+  }
+}
+
+class _SkeletonLine extends StatelessWidget {
+  const _SkeletonLine({required this.widthFactor, required this.scheme});
+
+  final double widthFactor;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      alignment: Alignment.centerLeft,
+      child: Container(
+        height: 12,
+        decoration: BoxDecoration(
+          color: scheme.outline.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
     );
   }
@@ -467,10 +1014,7 @@ Widget _animatedState({
 }) {
   return AnimatedSwitcher(
     duration: const Duration(milliseconds: 200),
-    child: KeyedSubtree(
-      key: ValueKey<Type>(state.runtimeType),
-      child: child,
-    ),
+    child: KeyedSubtree(key: ValueKey<Type>(state.runtimeType), child: child),
   );
 }
 
@@ -485,7 +1029,8 @@ class _PrayerSectionContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final SectionState<PrayerSchedule> state = controller.prayerSchedule.value;
+      final SectionState<PrayerSchedule> state =
+          controller.prayerSchedule.value;
       // Observe the live clock + resolved next prayer so the countdown ticks.
       final NextPrayerResult? next = controller.nextPrayer.value;
       controller.now.value;
@@ -518,189 +1063,6 @@ class _PrayerSectionContent extends StatelessWidget {
       return _animatedState(state: state, child: body);
     });
   }
-}
-
-/// Scan-to-Donate section: renders the QR code for the active organization's
-/// donation URL (Requirements 9.1, 9.2, 13.1, 13.3).
-class _QrSectionContent extends StatelessWidget {
-  const _QrSectionContent({required this.controller});
-
-  final HomeController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final SectionState<String> state = controller.qr.value;
-
-      Widget body;
-      if (state is SectionLoading<String>) {
-        body = const Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: ShimmerLoader(shape: ShimmerShape.qrCard),
-          ),
-        );
-      } else if (state is SectionLoaded<String>) {
-        body = Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: ScanToDonateCard(donationUrl: state.data, showUrl: false),
-          ),
-        );
-      } else if (state is SectionEmpty<String>) {
-        body = const _EmptyState(message: 'Scan-to-Donate is unavailable.');
-      } else if (state is SectionError<String>) {
-        body = _ErrorState(
-          message: state.message,
-          onRetry: () => controller.retrySection(HomeSection.qr),
-        );
-      } else {
-        body = const SizedBox.shrink();
-      }
-
-      return _animatedState(state: state, child: body);
-    });
-  }
-}
-
-/// Available Programs section: each program name with a Register control
-/// (Requirements 7.1, 13.1, 13.3).
-class _ProgramsSectionContent extends StatelessWidget {
-  const _ProgramsSectionContent({required this.controller});
-
-  final HomeController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final SectionState<List<Program>> state = controller.programs.value;
-
-      return _sectionBody<List<Program>>(
-        state: state,
-        shimmerShape: ShimmerShape.programsList,
-        onRetry: () => controller.retrySection(HomeSection.programs),
-        emptyMessage: 'No programs available.',
-        wrapInScrollView: false,
-        onLoaded: (List<Program> programs) => ProgramsSection(
-          programs: programs,
-        ),
-      );
-    });
-  }
-}
-
-/// Donation Categories section: each category name with a Donate control; the
-/// empty state shows a disabled, grayed Donate control (Requirements 8.1, 8.3,
-/// 13.1, 13.3).
-class _DonationsSectionContent extends StatelessWidget {
-  const _DonationsSectionContent({required this.controller});
-
-  final HomeController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final SectionState<List<DonationCategory>> state =
-          controller.donations.value;
-
-      if (state is SectionEmpty<List<DonationCategory>>) {
-        // Req 8.3: empty donations still surface a (disabled) Donate control.
-        return _animatedState(
-          state: state,
-          child: const _DonationsEmptyState(),
-        );
-      }
-
-      return _sectionBody<List<DonationCategory>>(
-        state: state,
-        shimmerShape: ShimmerShape.donationCategories,
-        onRetry: () => controller.retrySection(HomeSection.donations),
-        emptyMessage: 'No donation categories available.',
-        wrapInScrollView: false,
-        onLoaded: (List<DonationCategory> categories) => DonationsSection(
-          categories: categories,
-        ),
-      );
-    });
-  }
-}
-
-/// Empty Donation Categories state with a disabled, grayed Donate control
-/// (Requirement 8.3).
-class _DonationsEmptyState extends StatelessWidget {
-  const _DonationsEmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme scheme = theme.colorScheme;
-
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(
-            Icons.volunteer_activism_outlined,
-            size: 40,
-            color: scheme.onSurface.withValues(alpha: 0.35),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'No donation categories available.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurface.withValues(alpha: 0.55),
-            ),
-          ),
-          const SizedBox(height: 14),
-          const KioskButton(
-            label: 'Donate',
-            icon: Icons.volunteer_activism_rounded,
-            variant: KioskButtonVariant.secondary,
-            isEnabled: false,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Generic section body + shared empty/error widgets
-// ---------------------------------------------------------------------------
-
-/// Maps a [SectionState] to its widget (Requirements 13.1, 13.3):
-/// * [SectionLoading] → [ShimmerLoader];
-/// * [SectionLoaded]  → [onLoaded] result;
-/// * [SectionEmpty]   → empty-state message;
-/// * [SectionError]   → error message + Retry control.
-///
-/// State changes cross-fade via [_animatedState].
-Widget _sectionBody<T>({
-  required SectionState<T> state,
-  required ShimmerShape shimmerShape,
-  required VoidCallback onRetry,
-  required Widget Function(T data) onLoaded,
-  required String emptyMessage,
-  bool wrapInScrollView = true,
-}) {
-  Widget body;
-  if (state is SectionLoading<T>) {
-    final Widget loader = ShimmerLoader(shape: shimmerShape);
-    body = wrapInScrollView ? SingleChildScrollView(child: loader) : loader;
-  } else if (state is SectionLoaded<T>) {
-    final Widget content = onLoaded(state.data);
-    body =
-        wrapInScrollView ? SingleChildScrollView(child: content) : content;
-  } else if (state is SectionEmpty<T>) {
-    body = _EmptyState(message: emptyMessage);
-  } else if (state is SectionError<T>) {
-    body = _ErrorState(message: state.message, onRetry: onRetry);
-  } else {
-    body = const SizedBox.shrink();
-  }
-
-  return _animatedState(state: state, child: body);
 }
 
 /// A centered empty-state message.

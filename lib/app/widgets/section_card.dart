@@ -14,7 +14,7 @@ class SectionCard extends StatelessWidget {
     this.icon,
     this.action,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(12),
     this.expandChild = false,
   });
 
@@ -57,12 +57,13 @@ class SectionCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.14)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -72,19 +73,30 @@ class SectionCard extends StatelessWidget {
 
   Widget _buildHeader(ThemeData theme, ColorScheme scheme) {
     final TextStyle titleStyle =
-        (theme.textTheme.titleLarge ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w600,
-    );
+        (theme.textTheme.labelLarge ?? const TextStyle()).copyWith(
+          color: scheme.primary,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0,
+        );
 
     return Row(
       children: <Widget>[
         if (icon != null) ...<Widget>[
-          Icon(icon, color: scheme.primary, size: 26),
-          const SizedBox(width: 10),
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+              border: Border.all(color: scheme.primary.withValues(alpha: 0.22)),
+            ),
+            child: Icon(icon, color: scheme.primary, size: 20),
+          ),
+          const SizedBox(width: 9),
         ],
         Expanded(
           child: Text(
-            title!,
+            title!.toUpperCase(),
             style: titleStyle,
             overflow: TextOverflow.ellipsis,
           ),
