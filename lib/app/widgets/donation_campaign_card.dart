@@ -219,7 +219,7 @@ class _CompactDonationCampaignCard extends StatelessWidget {
                   category.displayDescription,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurface.withValues(alpha: 0.66),
                     fontWeight: FontWeight.w500,
                     height: 1.1,
@@ -251,7 +251,7 @@ class _CompactDonationCampaignCard extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(borderRadius: radius),
                       textStyle: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -343,7 +343,7 @@ class _CompactMeta extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: scheme.onSurface.withValues(alpha: 0.76),
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),

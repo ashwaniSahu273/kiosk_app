@@ -437,7 +437,7 @@ class _ScanDonatePanel extends StatelessWidget {
           Text(
             'Scan to Donate',
             textAlign: TextAlign.center,
-            style: theme.textTheme.headlineSmall?.copyWith(
+            style: theme.textTheme.titleLarge?.copyWith(
               color: scheme.onSurface,
               fontWeight: FontWeight.w800,
               height: 1.1,

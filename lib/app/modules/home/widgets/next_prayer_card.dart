@@ -137,9 +137,9 @@ class _HomeNextPrayerDashboard extends StatelessWidget {
                     children: <Widget>[
                       FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text(
+                        child:                         Text(
                           next.prayer.name,
-                          style: theme.textTheme.displayMedium?.copyWith(
+                          style: theme.textTheme.headlineSmall?.copyWith(
                             color: scheme.primary,
                             fontWeight: FontWeight.w900,
                             height: 0.98,
@@ -293,7 +293,7 @@ class _CountdownRing extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           formatCountdownHms(countdown),
-                          style: theme.textTheme.displaySmall?.copyWith(
+                          style: theme.textTheme.headlineSmall?.copyWith(
                             color: scheme.onSurface,
                             fontWeight: FontWeight.w900,
                             height: 1,
