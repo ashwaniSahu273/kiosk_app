@@ -10,21 +10,26 @@ import 'next_prayer_resolver.dart';
 import 'section_state.dart';
 import 'widgets/widgets.dart';
 
-/// The full landscape Home_Screen (Requirements 5.1, 5.4, 5.7, 12.3, 12.4,
-/// 13.1, 13.3).
+/// The full landscape Home_Screen (Requirements 5.1, 12.3, 12.4, 13.1, 13.3),
+/// matching the reference design 1:1.
 ///
-/// Layout (sidebar-less; shared [KioskDestinationScaffold] top navigation):
+/// Layout (sidebar-less; shared [KioskDestinationScaffold] top navigation;
+/// the content area below the bar scrolls vertically):
 ///   ┌────────────────────────────────────────────────────────────────────┐
 ///   │  KioskTopNavBar (logo · nav pills · clock · logout)                │
 ///   ├──────────────────────────────────────────────┬─────────────────────┤
-///   │  Next Prayer (hero dashboard)                │  Scan to Donate     │
-///   ├──────────────────────────────┬───────────────┴─────────────────────┤
-///   │  Donation Categories         │  Available Programs                 │
-///   └──────────────────────────────┴─────────────────────────────────────┘
+///   │  Next Prayer (hero: countdown + upcoming)    │  Scan to Donate     │
+///   ├──────────────────────────────────────────────┴─────────────────────┤
+///   │  Today's Prayer Times (tile per prayer, next highlighted)          │
+///   ├────────────────────────────────────────────────────────────────────┤
+///   │  Donation Categories (horizontal campaign cards)                   │
+///   ├────────────────────────────────────────────────────────────────────┤
+///   │  Available Programs (horizontal campaign cards)                    │
+///   └────────────────────────────────────────────────────────────────────┘
 ///
-/// All four required sections are simultaneously visible at ≥1024×600 without
-/// scrolling the page (Requirements 5.4, 5.7); the layout is built entirely
-/// from [Expanded]/[Flexible] so it fits the viewport and never overflows.
+/// Each section sits at a comfortable fixed height inside a single
+/// [SingleChildScrollView], so the page scrolls smoothly and nothing ever
+/// overflows regardless of how much content an organization configures.
 ///
 /// Each section renders from its own [SectionState] (Requirements 13.1, 13.3):
 /// * [SectionLoading] → [ShimmerLoader] with the matching [ShimmerShape];
@@ -230,80 +235,221 @@ class _SectionRetryRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Main content grid (all four sections visible simultaneously)
+// Main scrollable content (reference-image layout)
 // ---------------------------------------------------------------------------
 
-/// The content grid shown when every required section is resolved.
+/// The scrollable Home content shown when every required section is resolved.
 ///
-/// Top row:    Next Prayer hero dashboard (wide) + Scan to Donate (right)
-/// Bottom row: Donation Categories + Available Programs
+/// Row 1: Next Prayer hero dashboard (countdown + upcoming prayers) with the
+///        Scan-to-Donate QR card beside it.
+/// Row 2: Today's Prayer Times — one tile per prayer, next prayer highlighted.
+/// Row 3: Donation Categories — horizontally scrolling campaign cards.
+/// Row 4: Available Programs — horizontally scrolling campaign cards.
 ///
-/// Built from [Expanded]/[Flexible] so the four sections fit 1024×600 without
-/// page scrolling or overflow (Requirements 5.4, 5.7).
+/// Every section gets a comfortable fixed height inside one vertical
+/// [SingleChildScrollView], so the page scrolls smoothly and never overflows.
 class _HomeContentGrid extends StatelessWidget {
   const _HomeContentGrid({required this.controller});
 
   final HomeController controller;
 
+  static const double _spacing = 14;
+  static const double _heroHeight = 248;
+  static const double _prayerTimesHeight = 124;
+  static const double _campaignSectionHeight = 332;
+
   @override
   Widget build(BuildContext context) {
-    const double spacing = 12;
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          // ---- Row 1: hero next-prayer dashboard + scan-to-donate ----
+          SizedBox(
+            height: _heroHeight,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                  child: _PrayerSectionContent(controller: controller),
+                ),
+                const SizedBox(width: _spacing),
+                SizedBox(
+                  width: 236,
+                  child: SectionCard(
+                    title: 'Scan to Donate',
+                    icon: Icons.qr_code_2_rounded,
+                    expandChild: true,
+                    padding: const EdgeInsets.all(16),
+                    child: _QrSectionContent(controller: controller),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: _spacing),
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        // ---- Top row: hero next-prayer dashboard + scan-to-donate ----
-        Expanded(
-          flex: 11,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
+          // ---- Row 2: today's prayer times tiles ----
+          SizedBox(
+            height: _prayerTimesHeight,
+            child: SectionCard(
+              title: "Today's Prayer Times",
+              icon: Icons.mosque_rounded,
+              expandChild: true,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: _PrayerTimesRow(controller: controller),
+            ),
+          ),
+          const SizedBox(height: _spacing),
+
+          // ---- Row 3: donation categories ----
+          SizedBox(
+            height: _campaignSectionHeight,
+            child: SectionCard(
+              title: 'Donation Categories',
+              icon: Icons.volunteer_activism_rounded,
+              expandChild: true,
+              child: _DonationsSectionContent(controller: controller),
+            ),
+          ),
+          const SizedBox(height: _spacing),
+
+          // ---- Row 4: available programs ----
+          SizedBox(
+            height: _campaignSectionHeight,
+            child: SectionCard(
+              title: 'Available Programs',
+              icon: Icons.event_rounded,
+              expandChild: true,
+              child: _ProgramsSectionContent(controller: controller),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Today's prayer times row (tile per prayer, next prayer highlighted)
+// ---------------------------------------------------------------------------
+
+/// A horizontal row of prayer-time tiles for today's schedule. The resolved
+/// next prayer is highlighted in the theme primary color so visitors can read
+/// the full timetable at a glance beside the hero countdown.
+class _PrayerTimesRow extends StatelessWidget {
+  const _PrayerTimesRow({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final SectionState<PrayerSchedule> state =
+          controller.prayerSchedule.value;
+      final NextPrayerResult? next = controller.nextPrayer.value;
+
+      Widget body;
+      if (state is SectionLoading<PrayerSchedule>) {
+        body = const ShimmerLoader(shape: ShimmerShape.prayerTimes);
+      } else if (state is SectionLoaded<PrayerSchedule>) {
+        final List<PrayerTime> prayers =
+            List<PrayerTime>.of(state.data.prayers)
+              ..sort((PrayerTime a, PrayerTime b) =>
+                  a.minutesSinceMidnight.compareTo(b.minutesSinceMidnight));
+        body = Row(
+          children: <Widget>[
+            for (int i = 0; i < prayers.length; i++) ...<Widget>[
+              if (i > 0) const SizedBox(width: 10),
               Expanded(
-                flex: 3,
-                child: _PrayerSectionContent(controller: controller),
-              ),
-              const SizedBox(width: spacing),
-              SizedBox(
-                width: 240,
-                child: SectionCard(
-                  title: 'Scan to Donate',
-                  icon: Icons.qr_code_2_rounded,
-                  expandChild: true,
-                  child: _QrSectionContent(controller: controller),
+                child: _PrayerTimeTile(
+                  prayer: prayers[i],
+                  isNext: next != null && next.prayer == prayers[i],
                 ),
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: spacing),
+          ],
+        );
+      } else if (state is SectionEmpty<PrayerSchedule>) {
+        body = const _EmptyState(message: 'No prayer schedule available.');
+      } else if (state is SectionError<PrayerSchedule>) {
+        body = _ErrorState(
+          message: state.message,
+          onRetry: () => controller.retrySection(HomeSection.prayerSchedule),
+        );
+      } else {
+        body = const SizedBox.shrink();
+      }
 
-        // ---- Bottom row: donations + programs ----
-        Expanded(
-          flex: 9,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Expanded(
-                child: SectionCard(
-                  title: 'Donation Categories',
-                  icon: Icons.volunteer_activism_rounded,
-                  expandChild: true,
-                  child: _DonationsSectionContent(controller: controller),
-                ),
+      return _animatedState(state: state, child: body);
+    });
+  }
+}
+
+/// One prayer tile: the prayer name above its time. The next prayer fills with
+/// the theme primary color; the rest sit on a soft tinted surface.
+class _PrayerTimeTile extends StatelessWidget {
+  const _PrayerTimeTile({required this.prayer, required this.isNext});
+
+  final PrayerTime prayer;
+  final bool isNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+
+    final Color background = isNext
+        ? scheme.primary
+        : scheme.primary.withValues(alpha: 0.06);
+    final Color nameColor = isNext
+        ? scheme.onPrimary.withValues(alpha: 0.92)
+        : scheme.onSurface.withValues(alpha: 0.65);
+    final Color timeColor = isNext ? scheme.onPrimary : scheme.onSurface;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+        border: isNext
+            ? null
+            : Border.all(color: scheme.primary.withValues(alpha: 0.12)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              prayer.name,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: nameColor,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(width: spacing),
-              Expanded(
-                child: SectionCard(
-                  title: 'Available Programs',
-                  icon: Icons.event_rounded,
-                  expandChild: true,
-                  child: _ProgramsSectionContent(controller: controller),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              formatTime12h(prayer.minutesSinceMidnight),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: timeColor,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const <FontFeature>[
+                  FontFeature.tabularFigures(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -386,19 +532,33 @@ class _QrSectionContent extends StatelessWidget {
     return Obx(() {
       final SectionState<String> state = controller.qr.value;
 
-      return _sectionBody<String>(
-        state: state,
-        shimmerShape: ShimmerShape.qrCard,
-        onRetry: () => controller.retrySection(HomeSection.qr),
-        emptyMessage: 'Scan-to-Donate is unavailable.',
-        wrapInScrollView: false,
-        onLoaded: (String url) => Center(
+      Widget body;
+      if (state is SectionLoading<String>) {
+        body = const Center(
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: ScanToDonateCard(donationUrl: url, showUrl: false),
+            child: ShimmerLoader(shape: ShimmerShape.qrCard),
           ),
-        ),
-      );
+        );
+      } else if (state is SectionLoaded<String>) {
+        body = Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ScanToDonateCard(donationUrl: state.data, showUrl: false),
+          ),
+        );
+      } else if (state is SectionEmpty<String>) {
+        body = const _EmptyState(message: 'Scan-to-Donate is unavailable.');
+      } else if (state is SectionError<String>) {
+        body = _ErrorState(
+          message: state.message,
+          onRetry: () => controller.retrySection(HomeSection.qr),
+        );
+      } else {
+        body = const SizedBox.shrink();
+      }
+
+      return _animatedState(state: state, child: body);
     });
   }
 }
