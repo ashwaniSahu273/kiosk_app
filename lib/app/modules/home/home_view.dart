@@ -255,9 +255,9 @@ class _HomeContentGrid extends StatelessWidget {
   final HomeController controller;
 
   static const double _spacing = 12;
-  static const double _featuredHeight = 166;
-  static const double _heroHeight = 360;
-  static const double _donationHeight = 184;
+  static const double _featuredHeight = 186;
+  static const double _heroHeight = 300;
+  static const double _donationHeight = 200;
   static const double _footerHeight = 56;
 
   @override
@@ -489,36 +489,36 @@ class _ScanDonatePanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 2.55,
-            children: <Widget>[
-              _QuickActionTile(
-                icon: Icons.volunteer_activism_outlined,
-                label: 'Give\nDonation',
-                onTap: () => Get.toNamed<void>(AppRoutes.donate),
-              ),
-              _QuickActionTile(
-                icon: Icons.schedule_rounded,
-                label: 'Prayer\nTimes',
-                onTap: () => Get.toNamed<void>(AppRoutes.prayers),
-              ),
-              _QuickActionTile(
-                icon: Icons.calendar_month_outlined,
-                label: 'Programs\n& Events',
-                onTap: () => Get.toNamed<void>(AppRoutes.programs),
-              ),
-              _QuickActionTile(
-                icon: Icons.mosque_outlined,
-                label: 'Masjid\nInfo',
-                onTap: () => Get.toNamed<void>(AppRoutes.home),
-              ),
-            ],
-          ),
+          // GridView.count(
+          //   shrinkWrap: true,
+          //   physics: const NeverScrollableScrollPhysics(),
+          //   crossAxisCount: 2,
+          //   mainAxisSpacing: 10,
+          //   crossAxisSpacing: 10,
+          //   childAspectRatio: 2.55,
+          //   children: <Widget>[
+          //     _QuickActionTile(
+          //       icon: Icons.volunteer_activism_outlined,
+          //       label: 'Give\nDonation',
+          //       onTap: () => Get.toNamed<void>(AppRoutes.donate),
+          //     ),
+          //     _QuickActionTile(
+          //       icon: Icons.schedule_rounded,
+          //       label: 'Prayer\nTimes',
+          //       onTap: () => Get.toNamed<void>(AppRoutes.prayers),
+          //     ),
+          //     _QuickActionTile(
+          //       icon: Icons.calendar_month_outlined,
+          //       label: 'Programs\n& Events',
+          //       onTap: () => Get.toNamed<void>(AppRoutes.programs),
+          //     ),
+          //     _QuickActionTile(
+          //       icon: Icons.mosque_outlined,
+          //       label: 'Masjid\nInfo',
+          //       onTap: () => Get.toNamed<void>(AppRoutes.home),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );

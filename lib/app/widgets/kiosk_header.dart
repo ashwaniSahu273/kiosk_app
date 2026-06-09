@@ -233,6 +233,7 @@ class KioskHeader extends StatelessWidget {
     this.organizationContext,
     this.themeEngine,
     this.clock,
+    this.trailing,
   });
 
   /// Injectable [OrganizationContext]; defaults to the registered singleton.
@@ -243,6 +244,9 @@ class KioskHeader extends StatelessWidget {
 
   /// Injectable clock for the current time; defaults to [DateTime.now].
   final DateTime Function()? clock;
+
+  /// Optional trailing control rendered after the status strip (e.g. logout).
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +277,10 @@ class KioskHeader extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           _KioskHeaderStatusStrip(clock: clock),
+          if (trailing != null) ...<Widget>[
+            const SizedBox(width: 16),
+            trailing!,
+          ],
         ],
       ),
     );
@@ -343,10 +351,10 @@ class _KioskHeaderStatusStripState extends State<_KioskHeaderStatusStrip> {
           style: statusStyle,
         ),
         const SizedBox(width: 78),
-        _HeaderIcon(icon: Icons.wifi_rounded, color: textColor),
-        const SizedBox(width: 24),
-        _HeaderIcon(icon: Icons.volume_up_rounded, color: textColor),
-        const SizedBox(width: 24),
+        // _HeaderIcon(icon: Icons.wifi_rounded, color: textColor),
+        // const SizedBox(width: 24),
+        // _HeaderIcon(icon: Icons.volume_up_rounded, color: textColor),
+        // const SizedBox(width: 24),
         _HeaderIcon(icon: Icons.settings_outlined, color: textColor),
       ],
     );

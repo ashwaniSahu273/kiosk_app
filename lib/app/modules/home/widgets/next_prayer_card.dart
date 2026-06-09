@@ -169,9 +169,9 @@ class _HomeNextPrayerDashboard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 86),
-                SizedBox(
-                  width: 330,
+                const SizedBox(width: 24),
+                Expanded(
+                  flex: 54,
                   child: _UpcomingPrayersList(prayers: upcoming, theme: theme),
                 ),
               ],
@@ -251,7 +251,7 @@ class _CountdownRing extends StatelessWidget {
         final double maxHeight = constraints.maxHeight.isFinite
             ? constraints.maxHeight
             : 230;
-        final double ringSize = math.min(220, math.min(maxWidth, maxHeight));
+        final double ringSize = math.min(300, math.min(maxWidth, maxHeight));
 
         return Center(
           child: SizedBox(
@@ -340,11 +340,11 @@ class _UpcomingPrayersList extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            Icon(Icons.mosque_rounded, color: scheme.primary, size: 22),
-            const SizedBox(width: 9),
+            Icon(Icons.mosque_rounded, color: scheme.primary, size: 18),
+            const SizedBox(width: 7),
             Text(
               'UPCOMING PRAYERS',
-              style: theme.textTheme.titleSmall?.copyWith(
+              style: theme.textTheme.labelLarge?.copyWith(
                 color: scheme.primary,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0,
@@ -352,21 +352,21 @@ class _UpcomingPrayersList extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 8),
         Expanded(
           child: ListView.separated(
             padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: math.min(4, prayers.length),
-            separatorBuilder: (_, __) => const SizedBox(height: 0),
+            itemCount: prayers.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 4),
             itemBuilder: (BuildContext context, int index) {
               final PrayerTime prayer = prayers[index];
               final bool isNight =
                   prayer.name.toLowerCase().contains('isha') ||
                   prayer.name.toLowerCase().contains('fajr');
               return Container(
-                height: 60,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(8),
@@ -381,13 +381,13 @@ class _UpcomingPrayersList extends StatelessWidget {
                           ? Icons.nightlight_round
                           : Icons.wb_twilight_rounded,
                       color: scheme.primary,
-                      size: 24,
+                      size: 18,
                     ),
-                    const SizedBox(width: 15),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         prayer.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           color: scheme.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
@@ -395,7 +395,7 @@ class _UpcomingPrayersList extends StatelessWidget {
                     ),
                     Text(
                       formatTime12h(prayer.minutesSinceMidnight),
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurface,
                         fontWeight: FontWeight.w700,
                         fontFeatures: const <FontFeature>[
