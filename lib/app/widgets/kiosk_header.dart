@@ -7,23 +7,19 @@ import '../core/data/models/models.dart';
 import '../core/services/organization_context.dart';
 import '../core/services/theme_engine.dart';
 
-/// The kiosk Home_Screen header (Requirements 4.3, 5.1, 5.2).
+/// The active organization's logo and display name (Requirement 4.3).
 ///
-/// Shows the active organization's logo (resolved through
-/// [ThemeEngine.resolveLogo], falling back to the bundled placeholder via
-/// [ThemeEngine.reportLogoLoadFailure] if the resolved image fails to load),
-/// the organization display name, the current calendar date, and a live clock
-/// that is refreshed at least once every 60 seconds.
-///
-/// Branding is pulled reactively from the [OrganizationContext], so the header
-/// re-renders when a different organization becomes active. The internal clock
-/// [Timer] is created in [State.initState] and cancelled in [State.dispose].
-class KioskHeader extends StatefulWidget {
-  const KioskHeader({
+/// The logo is resolved through [ThemeEngine.resolveLogo], falling back to the
+/// bundled placeholder via [ThemeEngine.reportLogoLoadFailure] if the resolved
+/// image fails to load. Branding is pulled reactively from the
+/// [OrganizationContext], so the brand block re-renders when a different
+/// organization becomes active.
+class KioskHeaderBrand extends StatelessWidget {
+  const KioskHeaderBrand({
     super.key,
     this.organizationContext,
     this.themeEngine,
-    this.clock,
+    this.logoSize = 56,
   });
 
   /// Injectable [OrganizationContext]; defaults to the registered singleton.
@@ -32,89 +28,39 @@ class KioskHeader extends StatefulWidget {
   /// Injectable [ThemeEngine]; defaults to the registered singleton.
   final ThemeEngine? themeEngine;
 
-  /// Injectable clock for the current time; defaults to [DateTime.now].
-  final DateTime Function()? clock;
-
-  @override
-  State<KioskHeader> createState() => _KioskHeaderState();
-}
-
-class _KioskHeaderState extends State<KioskHeader> {
-  /// Ticks the live clock. A 1-second period keeps the displayed time current
-  /// and comfortably satisfies the "at least every 60 seconds" rule (5.2).
-  static const Duration _tick = Duration(seconds: 1);
-
-  Timer? _timer;
-  late DateTime _now;
-
-  DateTime Function() get _clock => widget.clock ?? DateTime.now;
+  /// Logo height/width in logical pixels.
+  final double logoSize;
 
   OrganizationContext get _orgContext =>
-      widget.organizationContext ?? Get.find<OrganizationContext>();
+      organizationContext ?? Get.find<OrganizationContext>();
 
-  ThemeEngine get _themeEngine =>
-      widget.themeEngine ?? Get.find<ThemeEngine>();
-
-  @override
-  void initState() {
-    super.initState();
-    _now = _clock();
-    _timer = Timer.periodic(_tick, (_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() => _now = _clock());
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _timer = null;
-    super.dispose();
-  }
+  ThemeEngine get _themeEngine => themeEngine ?? Get.find<ThemeEngine>();
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final ColorScheme scheme = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return Obx(() {
+      final BrandingProfile? branding = _orgContext.branding;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _buildLogo(branding),
+          const SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              branding?.displayName ?? '',
+              style: (theme.textTheme.headlineSmall ?? const TextStyle())
+                  .copyWith(fontWeight: FontWeight.w700),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
-      ),
-      child: Obx(() {
-        final BrandingProfile? branding = _orgContext.branding;
-        return Row(
-          children: <Widget>[
-            _buildLogo(branding),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                branding?.displayName ?? '',
-                style: (theme.textTheme.headlineSmall ?? const TextStyle())
-                    .copyWith(fontWeight: FontWeight.w700),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 16),
-            _buildDateTime(theme),
-          ],
-        );
-      }),
-    );
+      );
+    });
   }
 
   Widget _buildLogo(BrandingProfile? branding) {
-    const double logoSize = 56;
     final ThemeEngine engine = _themeEngine;
 
     final ImageProvider provider = branding == null
@@ -138,8 +84,56 @@ class _KioskHeaderState extends State<KioskHeader> {
       ),
     );
   }
+}
 
-  Widget _buildDateTime(ThemeData theme) {
+/// A live clock above the current calendar date (Requirements 5.1, 5.2).
+///
+/// Refreshed every second via an internal [Timer] created in
+/// [State.initState] and cancelled in [State.dispose]; tabular figures keep
+/// the layout from jittering as digits change.
+class KioskHeaderClock extends StatefulWidget {
+  const KioskHeaderClock({super.key, this.clock});
+
+  /// Injectable clock for the current time; defaults to [DateTime.now].
+  final DateTime Function()? clock;
+
+  @override
+  State<KioskHeaderClock> createState() => _KioskHeaderClockState();
+}
+
+class _KioskHeaderClockState extends State<KioskHeaderClock> {
+  /// Ticks the live clock. A 1-second period keeps the displayed time current
+  /// and comfortably satisfies the "at least every 60 seconds" rule (5.2).
+  static const Duration _tick = Duration(seconds: 1);
+
+  Timer? _timer;
+  late DateTime _now;
+
+  DateTime Function() get _clock => widget.clock ?? DateTime.now;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = _clock();
+    _timer = Timer.periodic(_tick, (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _now = _clock());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     final TextStyle clockStyle =
         (theme.textTheme.headlineMedium ?? const TextStyle()).copyWith(
       fontWeight: FontWeight.w600,
@@ -152,15 +146,15 @@ class _KioskHeaderState extends State<KioskHeader> {
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Text(_formatTime(_now), style: clockStyle),
+        Text(formatTime(_now), style: clockStyle),
         const SizedBox(height: 2),
-        Text(_formatDate(_now), style: dateStyle),
+        Text(formatDate(_now), style: dateStyle),
       ],
     );
   }
 
   /// Formats [time] as a 12-hour clock, e.g. "9:05 AM".
-  static String _formatTime(DateTime time) {
+  static String formatTime(DateTime time) {
     final int hour24 = time.hour;
     final String period = hour24 < 12 ? 'AM' : 'PM';
     int hour12 = hour24 % 12;
@@ -172,7 +166,7 @@ class _KioskHeaderState extends State<KioskHeader> {
   }
 
   /// Formats [date] as e.g. "Monday, January 1, 2025".
-  static String _formatDate(DateTime date) {
+  static String formatDate(DateTime date) {
     return '${_weekdays[date.weekday - 1]}, '
         '${_months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -201,4 +195,58 @@ class _KioskHeaderState extends State<KioskHeader> {
     'November',
     'December',
   ];
+}
+
+/// The kiosk Home_Screen header (Requirements 4.3, 5.1, 5.2).
+///
+/// A thin composition of [KioskHeaderBrand] and [KioskHeaderClock] kept for
+/// backward compatibility; new layouts compose the two pieces directly (see
+/// `KioskTopNavBar`).
+class KioskHeader extends StatelessWidget {
+  const KioskHeader({
+    super.key,
+    this.organizationContext,
+    this.themeEngine,
+    this.clock,
+  });
+
+  /// Injectable [OrganizationContext]; defaults to the registered singleton.
+  final OrganizationContext? organizationContext;
+
+  /// Injectable [ThemeEngine]; defaults to the registered singleton.
+  final ThemeEngine? themeEngine;
+
+  /// Injectable clock for the current time; defaults to [DateTime.now].
+  final DateTime Function()? clock;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: KioskHeaderBrand(
+              organizationContext: organizationContext,
+              themeEngine: themeEngine,
+            ),
+          ),
+          const SizedBox(width: 16),
+          KioskHeaderClock(clock: clock),
+        ],
+      ),
+    );
+  }
 }

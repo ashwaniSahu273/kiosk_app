@@ -32,7 +32,7 @@ class KioskSidebarScanFooter extends StatelessWidget {
           expandChild: false,
           child: ScanToDonateCard(
             donationUrl: url,
-            size: 200,
+            size: 180,
             showUrl: false,
           ),
         );

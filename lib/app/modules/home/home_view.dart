@@ -13,13 +13,14 @@ import 'widgets/widgets.dart';
 /// The full landscape Home_Screen (Requirements 5.1, 5.4, 5.7, 12.3, 12.4,
 /// 13.1, 13.3).
 ///
-/// Layout (landscape `Row`):
-///   ┌──────────────┬──────────────────────────────────────────────────────┐
-///   │  KioskSidebar│  KioskHeader (+ logout control)                      │
-///   │   (320 px)   ├──────────────────────────────────────────────────────┤
-///   │              │  Next Prayer       │  Donation Categories            │
-///   │              │  Available Programs │  Scan to Donate                │
-///   └──────────────┴──────────────────────────────────────────────────────┘
+/// Layout (sidebar-less; shared [KioskDestinationScaffold] top navigation):
+///   ┌────────────────────────────────────────────────────────────────────┐
+///   │  KioskTopNavBar (logo · nav pills · clock · logout)                │
+///   ├──────────────────────────────────────────────┬─────────────────────┤
+///   │  Next Prayer (hero dashboard)                │  Scan to Donate     │
+///   ├──────────────────────────────┬───────────────┴─────────────────────┤
+///   │  Donation Categories         │  Available Programs                 │
+///   └──────────────────────────────┴─────────────────────────────────────┘
 ///
 /// All four required sections are simultaneously visible at ≥1024×600 without
 /// scrolling the page (Requirements 5.4, 5.7); the layout is built entirely
@@ -27,16 +28,18 @@ import 'widgets/widgets.dart';
 ///
 /// Each section renders from its own [SectionState] (Requirements 13.1, 13.3):
 /// * [SectionLoading] → [ShimmerLoader] with the matching [ShimmerShape];
-/// * [SectionLoaded]  → interim inline content (Task 15 replaces these with
-///   dedicated section widgets);
+/// * [SectionLoaded]  → the section's content widget;
 /// * [SectionEmpty]   → a per-section empty-state message (disabled Donate
 ///   control for empty donations, Req 8.3);
 /// * [SectionError]   → an error message and a Retry control.
 ///
+/// State transitions cross-fade through an [AnimatedSwitcher] so shimmer
+/// placeholders dissolve smoothly into content.
+///
 /// Requirement 12.3/12.4 gating: while
 /// [HomeController.hasUnresolvedRequiredError] is true, the content grid is
 /// hidden and a full-screen "content could not be loaded" state lists every
-/// errored section with its own Retry control. When false, the 2×2 grid shows.
+/// errored section with its own Retry control. When false, the grid shows.
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -47,70 +50,19 @@ class HomeView extends GetView<HomeController> {
     await Get.offAllNamed<void>(AppRoutes.login);
   }
 
-  void _select(KioskDestination destination) {
-    switch (destination) {
-      case KioskDestination.home:
-        return; // Already on Home; no-op.
-      case KioskDestination.donate:
-        Get.toNamed<void>(AppRoutes.donate);
-        return;
-      case KioskDestination.prayers:
-        Get.toNamed<void>(AppRoutes.prayers);
-        return;
-      case KioskDestination.programs:
-        Get.toNamed<void>(AppRoutes.programs);
-        return;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            // ---- Left sidebar (fixed width) ----
-            KioskSidebar(
-              active: KioskDestination.home,
-              onSelect: _select,
-              footer: const KioskSidebarScanFooter(),
-            ),
-
-            // ---- Right: header + content ----
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  // Header (logo, org name, live date/time) with a logout
-                  // control beside it (Req 1.9, 5.1, 5.2).
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      const Expanded(child: KioskHeader()),
-                      _LogoutControl(onLogout: _logout),
-                    ],
-                  ),
-
-                  // Content area fills the remaining height.
-                  Expanded(
-                    child: Obx(() {
-                      // Reading the gate registers all four section states,
-                      // so this rebuilds whenever any section resolves.
-                      if (controller.hasUnresolvedRequiredError) {
-                        return _FullScreenErrorState(
-                          controller: controller,
-                        );
-                      }
-                      return _HomeContentGrid(controller: controller);
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return KioskDestinationScaffold(
+      active: KioskDestination.home,
+      trailing: _LogoutControl(onLogout: _logout),
+      child: Obx(() {
+        // Reading the gate registers all four section states, so this
+        // rebuilds whenever any section resolves.
+        if (controller.hasUnresolvedRequiredError) {
+          return _FullScreenErrorState(controller: controller);
+        }
+        return _HomeContentGrid(controller: controller);
+      }),
     );
   }
 }
@@ -119,7 +71,7 @@ class HomeView extends GetView<HomeController> {
 // Logout control
 // ---------------------------------------------------------------------------
 
-/// A logout control rendered beside the header (Requirement 1.9).
+/// A logout control rendered in the top navigation bar (Requirement 1.9).
 class _LogoutControl extends StatelessWidget {
   const _LogoutControl({required this.onLogout});
 
@@ -127,18 +79,11 @@ class _LogoutControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      color: scheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      alignment: Alignment.center,
-      child: KioskButton(
-        label: 'Log out',
-        icon: Icons.logout_rounded,
-        variant: KioskButtonVariant.secondary,
-        onPressed: () => onLogout(),
-      ),
+    return KioskButton(
+      label: 'Log out',
+      icon: Icons.logout_rounded,
+      variant: KioskButtonVariant.secondary,
+      onPressed: () => onLogout(),
     );
   }
 }
@@ -288,10 +233,10 @@ class _SectionRetryRow extends StatelessWidget {
 // Main content grid (all four sections visible simultaneously)
 // ---------------------------------------------------------------------------
 
-/// The 2×2 content grid shown when every required section is resolved.
+/// The content grid shown when every required section is resolved.
 ///
-/// Left column:  Next Prayer (top) + Available Programs (bottom)
-/// Right column: Donation Categories (top) + Scan to Donate (bottom)
+/// Top row:    Next Prayer hero dashboard (wide) + Scan to Donate (right)
+/// Bottom row: Donation Categories + Available Programs
 ///
 /// Built from [Expanded]/[Flexible] so the four sections fit 1024×600 without
 /// page scrolling or overflow (Requirements 5.4, 5.7).
@@ -304,56 +249,88 @@ class _HomeContentGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     const double spacing = 12;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Expanded(
-                  child: SectionCard(
-                    title: 'Next Prayer',
-                    icon: Icons.mosque_rounded,
-                    expandChild: true,
-                    child: _PrayerSectionContent(controller: controller),
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        // ---- Top row: hero next-prayer dashboard + scan-to-donate ----
+        Expanded(
+          flex: 11,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(
+                flex: 3,
+                child: _PrayerSectionContent(controller: controller),
+              ),
+              const SizedBox(width: spacing),
+              SizedBox(
+                width: 240,
+                child: SectionCard(
+                  title: 'Scan to Donate',
+                  icon: Icons.qr_code_2_rounded,
+                  expandChild: true,
+                  child: _QrSectionContent(controller: controller),
                 ),
-                const SizedBox(width: spacing),
-                Expanded(
-                  child: SectionCard(
-                    title: 'Donation Categories',
-                    icon: Icons.volunteer_activism_rounded,
-                    expandChild: true,
-                    child: _DonationsSectionContent(controller: controller),
-                  ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: spacing),
+
+        // ---- Bottom row: donations + programs ----
+        Expanded(
+          flex: 9,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(
+                child: SectionCard(
+                  title: 'Donation Categories',
+                  icon: Icons.volunteer_activism_rounded,
+                  expandChild: true,
+                  child: _DonationsSectionContent(controller: controller),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: spacing),
+              Expanded(
+                child: SectionCard(
+                  title: 'Available Programs',
+                  icon: Icons.event_rounded,
+                  expandChild: true,
+                  child: _ProgramsSectionContent(controller: controller),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: spacing),
-          Expanded(
-            child: SectionCard(
-              title: 'Available Programs',
-              icon: Icons.event_rounded,
-              expandChild: true,
-              child: _ProgramsSectionContent(controller: controller),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Per-section content (state → shimmer / interim content / empty / error)
+// Per-section content (state → shimmer / content / empty / error)
 // ---------------------------------------------------------------------------
 
-/// Next Prayer section: the day's prayer list plus the resolved next prayer and
-/// its live countdown (Requirements 6.1, 6.3, 6.5, 13.1, 13.3).
+/// Cross-fades between section states (shimmer → content/empty/error) so
+/// state changes feel smooth instead of popping (200 ms, matching the app's
+/// route fade).
+Widget _animatedState({
+  required SectionState<dynamic> state,
+  required Widget child,
+}) {
+  return AnimatedSwitcher(
+    duration: const Duration(milliseconds: 200),
+    child: KeyedSubtree(
+      key: ValueKey<Type>(state.runtimeType),
+      child: child,
+    ),
+  );
+}
+
+/// Next Prayer section: the hero dashboard with the day's prayer list, the
+/// resolved next prayer, and its live countdown (Requirements 6.1, 6.3, 6.5,
+/// 13.1, 13.3).
 class _PrayerSectionContent extends StatelessWidget {
   const _PrayerSectionContent({required this.controller});
 
@@ -369,11 +346,11 @@ class _PrayerSectionContent extends StatelessWidget {
       final bool hasCountdown = controller.hasCountdown;
       final String countdownLabel = controller.countdownLabel;
 
+      Widget body;
       if (state is SectionLoading<PrayerSchedule>) {
-        return const ShimmerLoader(shape: ShimmerShape.nextPrayer);
-      }
-      if (state is SectionLoaded<PrayerSchedule>) {
-        return NextPrayerCard(
+        body = const ShimmerLoader(shape: ShimmerShape.nextPrayer);
+      } else if (state is SectionLoaded<PrayerSchedule>) {
+        body = NextPrayerCard(
           fillHeight: true,
           schedule: state.data,
           next: next,
@@ -381,17 +358,47 @@ class _PrayerSectionContent extends StatelessWidget {
           countdownLabel: countdownLabel,
           now: controller.now.value,
         );
-      }
-      if (state is SectionEmpty<PrayerSchedule>) {
-        return const _EmptyState(message: 'No prayer schedule available.');
-      }
-      if (state is SectionError<PrayerSchedule>) {
-        return _ErrorState(
+      } else if (state is SectionEmpty<PrayerSchedule>) {
+        body = const _EmptyState(message: 'No prayer schedule available.');
+      } else if (state is SectionError<PrayerSchedule>) {
+        body = _ErrorState(
           message: state.message,
           onRetry: () => controller.retrySection(HomeSection.prayerSchedule),
         );
+      } else {
+        body = const SizedBox.shrink();
       }
-      return const SizedBox.shrink();
+
+      return _animatedState(state: state, child: body);
+    });
+  }
+}
+
+/// Scan-to-Donate section: renders the QR code for the active organization's
+/// donation URL (Requirements 9.1, 9.2, 13.1, 13.3).
+class _QrSectionContent extends StatelessWidget {
+  const _QrSectionContent({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final SectionState<String> state = controller.qr.value;
+
+      return _sectionBody<String>(
+        state: state,
+        shimmerShape: ShimmerShape.qrCard,
+        onRetry: () => controller.retrySection(HomeSection.qr),
+        emptyMessage: 'Scan-to-Donate is unavailable.',
+        wrapInScrollView: false,
+        onLoaded: (String url) => Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ScanToDonateCard(donationUrl: url, showUrl: false),
+          ),
+        ),
+      );
     });
   }
 }
@@ -438,7 +445,10 @@ class _DonationsSectionContent extends StatelessWidget {
 
       if (state is SectionEmpty<List<DonationCategory>>) {
         // Req 8.3: empty donations still surface a (disabled) Donate control.
-        return const _DonationsEmptyState();
+        return _animatedState(
+          state: state,
+          child: const _DonationsEmptyState(),
+        );
       }
 
       return _sectionBody<List<DonationCategory>>(
@@ -504,6 +514,8 @@ class _DonationsEmptyState extends StatelessWidget {
 /// * [SectionLoaded]  → [onLoaded] result;
 /// * [SectionEmpty]   → empty-state message;
 /// * [SectionError]   → error message + Retry control.
+///
+/// State changes cross-fade via [_animatedState].
 Widget _sectionBody<T>({
   required SectionState<T> state,
   required ShimmerShape shimmerShape,
@@ -512,23 +524,23 @@ Widget _sectionBody<T>({
   required String emptyMessage,
   bool wrapInScrollView = true,
 }) {
+  Widget body;
   if (state is SectionLoading<T>) {
     final Widget loader = ShimmerLoader(shape: shimmerShape);
-    return wrapInScrollView ? SingleChildScrollView(child: loader) : loader;
-  }
-  if (state is SectionLoaded<T>) {
+    body = wrapInScrollView ? SingleChildScrollView(child: loader) : loader;
+  } else if (state is SectionLoaded<T>) {
     final Widget content = onLoaded(state.data);
-    return wrapInScrollView
-        ? SingleChildScrollView(child: content)
-        : content;
+    body =
+        wrapInScrollView ? SingleChildScrollView(child: content) : content;
+  } else if (state is SectionEmpty<T>) {
+    body = _EmptyState(message: emptyMessage);
+  } else if (state is SectionError<T>) {
+    body = _ErrorState(message: state.message, onRetry: onRetry);
+  } else {
+    body = const SizedBox.shrink();
   }
-  if (state is SectionEmpty<T>) {
-    return _EmptyState(message: emptyMessage);
-  }
-  if (state is SectionError<T>) {
-    return _ErrorState(message: state.message, onRetry: onRetry);
-  }
-  return const SizedBox.shrink();
+
+  return _animatedState(state: state, child: body);
 }
 
 /// A centered empty-state message.

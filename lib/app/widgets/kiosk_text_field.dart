@@ -19,6 +19,7 @@ class KioskTextField extends StatelessWidget {
     this.hintText,
     this.prefixIcon,
     this.suffixIcon,
+    this.focusNode,
     this.keyboardType,
     this.textInputAction,
     this.enabled = true,
@@ -56,6 +57,9 @@ class KioskTextField extends StatelessWidget {
   /// Optional trailing widget (e.g. password visibility toggle).
   final Widget? suffixIcon;
 
+  /// Optional focus node for screens that need to react to keyboard focus.
+  final FocusNode? focusNode;
+
   /// Keyboard type (e.g. [TextInputType.emailAddress]).
   final TextInputType? keyboardType;
 
@@ -81,6 +85,7 @@ class KioskTextField extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       obscureText: obscureText,
       validator: validator,
       keyboardType: keyboardType,
