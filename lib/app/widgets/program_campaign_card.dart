@@ -171,7 +171,7 @@ class _CompactProgramCampaignCard extends StatelessWidget {
                 const SizedBox(height: 7),
                 Text(
                   program.displayDescription,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: mutedColor,
@@ -193,7 +193,7 @@ class _CompactProgramCampaignCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 SizedBox(
                   height: 28,
                   child: ElevatedButton(

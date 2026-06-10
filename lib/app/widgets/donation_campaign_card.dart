@@ -217,7 +217,7 @@ class _CompactDonationCampaignCard extends StatelessWidget {
                 const SizedBox(height: 7),
                 Text(
                   category.displayDescription,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurface.withValues(alpha: 0.66),
@@ -239,7 +239,7 @@ class _CompactDonationCampaignCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 SizedBox(
                   height: 28,
                   child: ElevatedButton(
