@@ -21,4 +21,7 @@ class AppRoutes {
 
   /// The Programs destination (protected).
   static const String programs = '/programs';
+
+  /// The Events destination (protected).
+  static const String events = '/events';
 }

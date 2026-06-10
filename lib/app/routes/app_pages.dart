@@ -9,6 +9,8 @@ import '../modules/home/home_binding.dart';
 import '../modules/home/home_view.dart';
 import '../modules/prayers/prayers_binding.dart';
 import '../modules/prayers/prayers_view.dart';
+import '../modules/events/events_binding.dart';
+import '../modules/events/events_view.dart';
 import '../modules/programs/programs_binding.dart';
 import '../modules/programs/programs_view.dart';
 import 'app_routes.dart';
@@ -57,6 +59,12 @@ class AppPages {
       name: AppRoutes.programs,
       page: () => const ProgramsView(),
       binding: ProgramsBinding(),
+      middlewares: <GetMiddleware>[AuthMiddleware()],
+    ),
+    GetPage<dynamic>(
+      name: AppRoutes.events,
+      page: () => const EventsView(),
+      binding: EventsBinding(),
       middlewares: <GetMiddleware>[AuthMiddleware()],
     ),
   ];

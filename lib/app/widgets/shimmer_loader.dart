@@ -30,6 +30,9 @@ enum ShimmerShape {
 
   /// Prayer-times destination: date chip + table placeholder.
   prayerTimes,
+
+  /// Compact event card skeletons (home horizontal events strip).
+  eventsList,
 }
 
 /// The single, app-wide animated shimmer loading placeholder (Requirement
@@ -89,6 +92,8 @@ class ShimmerLoader extends StatelessWidget {
         return const _QrCardSkeleton();
       case ShimmerShape.prayerTimes:
         return const _PrayerTimesSkeleton();
+      case ShimmerShape.eventsList:
+        return const _EventsListSkeleton();
     }
   }
 }
@@ -264,6 +269,64 @@ class _PrayerTimesSkeleton extends StatelessWidget {
           SizedBox(height: 16),
           Expanded(child: _Block(radius: 16)),
         ],
+      ),
+    );
+  }
+}
+
+/// Compact event card skeleton (home horizontal events strip).
+class _EventsListSkeleton extends StatelessWidget {
+  const _EventsListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List<Widget>.generate(3, (int index) {
+        return Padding(
+          padding: EdgeInsets.only(left: index == 0 ? 0 : 12),
+          child: const _EventCardSkeleton(),
+        );
+      }),
+    );
+  }
+}
+
+class _EventCardSkeleton extends StatelessWidget {
+  const _EventCardSkeleton();
+
+  static const double _cardHeight = 172;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 280,
+      height: _cardHeight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: _kBlock,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: const <Widget>[
+            _Block(height: 96, radius: 0),
+            Padding(
+              padding: EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _Block(height: 16),
+                  SizedBox(height: 8),
+                  _Block(height: 14, width: 160),
+                  SizedBox(height: 12),
+                  _Block(height: 14, width: 100),
+                  SizedBox(height: 4),
+                  _Block(height: 14, width: 120),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

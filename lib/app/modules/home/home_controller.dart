@@ -25,6 +25,9 @@ enum HomeSection {
 
   /// The Scan-to-Donate QR (the active organization's donation URL).
   qr,
+
+  /// The Events list.
+  events,
 }
 
 /// Drives the Home_Screen with **per-section independent state**.
@@ -111,6 +114,10 @@ class HomeController extends GetxController {
   final Rx<SectionState<String>> qr =
       Rx<SectionState<String>>(const SectionLoading<String>());
 
+  /// State of the Events section.
+  final Rx<SectionState<List<Event>>> events =
+      Rx<SectionState<List<Event>>>(const SectionLoading<List<Event>>());
+
   // ---- Live clock / countdown ----
 
   /// The current time, refreshed every tick. Exposed so the header/cards can
@@ -150,6 +157,7 @@ class HomeController extends GetxController {
       _loadPrograms(),
       _loadDonations(),
       _loadQr(),
+      _loadEvents(),
     ]);
   }
 
@@ -165,6 +173,8 @@ class HomeController extends GetxController {
         return _loadDonations();
       case HomeSection.qr:
         return _loadQr();
+      case HomeSection.events:
+        return _loadEvents();
     }
   }
 
@@ -249,6 +259,70 @@ class HomeController extends GetxController {
     donations.value = items.isEmpty
         ? const SectionEmpty<List<DonationCategory>>()
         : SectionLoaded<List<DonationCategory>>(items);
+  }
+
+  Future<void> _loadEvents() async {
+    final List<Event>? retained = _retained<List<Event>>(events);
+
+    _beginLoading(events, retained);
+
+    // Demo data loaded with simulated delay.
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+
+    final List<Event> items = <Event>[
+      const Event(
+        organizationId: 'demo',
+        id: 'evt-1',
+        name: 'Friday Jumu\'ah Prayer',
+        description:
+            'Weekly Friday congregational prayer. Khutbah begins at 1:15 PM followed by Salah.',
+        date: 'Every Friday',
+        time: '1:15 PM',
+        location: 'Main prayer hall',
+      ),
+      const Event(
+        organizationId: 'demo',
+        id: 'evt-2',
+        name: 'Quran Study Circle',
+        description:
+            'Weekly Quran study and reflection session open to all levels.',
+        date: 'Every Wednesday',
+        time: '7:30 PM',
+        location: 'Community room B',
+      ),
+      const Event(
+        organizationId: 'demo',
+        id: 'evt-3',
+        name: 'Community Iftar Dinner',
+        description:
+            'Join the community for a blessed iftar dinner during Ramadan.',
+        date: 'Ramadan 2025',
+        time: 'Maghrib time',
+        location: 'Community hall',
+      ),
+      const Event(
+        organizationId: 'demo',
+        id: 'evt-4',
+        name: 'Youth Leadership Workshop',
+        description:
+            'Workshop for young Muslims aged 13-18 on leadership and community engagement.',
+        date: 'Saturday, March 15',
+        time: '10:00 AM - 4:00 PM',
+        location: 'Youth center',
+      ),
+      const Event(
+        organizationId: 'demo',
+        id: 'evt-5',
+        name: 'Islamic Lecture Series',
+        description:
+            'Monthly guest speaker series on Islamic spirituality and contemporary issues.',
+        date: 'Last Saturday monthly',
+        time: '6:30 PM',
+        location: 'Main prayer hall',
+      ),
+    ];
+
+    events.value = SectionLoaded<List<Event>>(items);
   }
 
   Future<void> _loadQr() async {
@@ -348,7 +422,8 @@ class HomeController extends GetxController {
       prayerSchedule.value is SectionError ||
       programs.value is SectionError ||
       donations.value is SectionError ||
-      qr.value is SectionError;
+      qr.value is SectionError ||
+      events.value is SectionError;
 
   /// True when no required Home element has an unresolved error, so the view
   /// may reveal all resolved elements (Req 12.3).

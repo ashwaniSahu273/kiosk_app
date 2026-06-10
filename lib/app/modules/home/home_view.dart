@@ -159,6 +159,11 @@ class _FullScreenErrorState extends StatelessWidget {
               state: controller.qr.value,
               onRetry: () => controller.retrySection(HomeSection.qr),
             ),
+            _SectionRetryRow(
+              label: 'Upcoming Events',
+              state: controller.events.value,
+              onRetry: () => controller.retrySection(HomeSection.events),
+            ),
           ],
         ),
       ),
@@ -258,6 +263,7 @@ class _HomeContentGrid extends StatelessWidget {
   static const double _featuredHeight = 186;
   static const double _heroHeight = 300;
   static const double _donationHeight = 200;
+  static const double _eventsHeight = 220;
   static const double _footerHeight = 56;
 
   @override
@@ -307,6 +313,19 @@ class _HomeContentGrid extends StatelessWidget {
               actionLabel: 'View All Categories',
               onAction: () => Get.toNamed<void>(AppRoutes.donate),
               child: _DonationCategoriesContent(controller: controller),
+            ),
+          ),
+          const SizedBox(height: _spacing),
+
+          // ---- Row 4: upcoming events ----
+          SizedBox(
+            height: _eventsHeight,
+            child: _HomeSectionFrame(
+              title: 'Upcoming Events',
+              icon: Icons.calendar_month_rounded,
+              actionLabel: 'View All Events',
+              onAction: () => Get.toNamed<void>(AppRoutes.events),
+              child: _EventsContent(controller: controller),
             ),
           ),
           const SizedBox(height: _spacing),
@@ -1096,6 +1115,35 @@ class _EmptyState extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _EventsContent extends StatelessWidget {
+  const _EventsContent({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final SectionState<List<Event>> state = controller.events.value;
+
+      Widget body;
+      if (state is SectionLoading<List<Event>>) {
+        body = const ShimmerLoader(shape: ShimmerShape.eventsList);
+      } else if (state is SectionLoaded<List<Event>>) {
+        body = EventsSection(events: state.data);
+      } else if (state is SectionError<List<Event>>) {
+        body = _ErrorState(
+          message: state.message,
+          onRetry: () => controller.retrySection(HomeSection.events),
+        );
+      } else {
+        body = const _EmptyState(message: 'No upcoming events.');
+      }
+
+      return _animatedState(state: state, child: body);
+    });
   }
 }
 

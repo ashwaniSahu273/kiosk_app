@@ -14,7 +14,10 @@ enum KioskDestination {
   prayers,
 
   /// The Programs destination.
-  programs;
+  programs,
+
+  /// The Events destination.
+  events;
 
   /// Human-readable label shown beside the icon.
   String get label {
@@ -27,6 +30,8 @@ enum KioskDestination {
         return 'Prayers';
       case KioskDestination.programs:
         return 'Programs';
+      case KioskDestination.events:
+        return 'Events';
     }
   }
 
@@ -41,6 +46,8 @@ enum KioskDestination {
         return Icons.mosque_rounded;
       case KioskDestination.programs:
         return Icons.event_rounded;
+      case KioskDestination.events:
+        return Icons.calendar_month_rounded;
     }
   }
 }

@@ -62,6 +62,7 @@ class KioskDestinationScaffold extends StatelessWidget {
       KioskDestination.donate => AppRoutes.donate,
       KioskDestination.prayers => AppRoutes.prayers,
       KioskDestination.programs => AppRoutes.programs,
+      KioskDestination.events => AppRoutes.events,
     };
 
     if (active == KioskDestination.home) {

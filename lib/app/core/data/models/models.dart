@@ -2,6 +2,7 @@
 export 'auth_result.dart';
 export 'branding_profile.dart';
 export 'donation_category.dart';
+export 'event.dart';
 export 'org_owned.dart';
 export 'organization.dart';
 export 'friday_prayer_event.dart';
