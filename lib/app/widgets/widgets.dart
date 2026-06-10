@@ -10,6 +10,7 @@ export 'kiosk_button.dart';
 export 'kiosk_destination_scaffold.dart';
 export 'kiosk_header.dart';
 export 'kiosk_loader.dart';
+export 'kiosk_screen_header.dart';
 export 'kiosk_sidebar.dart';
 export 'kiosk_sidebar_scan_footer.dart';
 export 'kiosk_text_field.dart';

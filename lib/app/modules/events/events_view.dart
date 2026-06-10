@@ -36,36 +36,47 @@ class _EventsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SectionCard(
-      title: 'Upcoming Events',
-      icon: Icons.event_rounded,
-      expandChild: true,
-      child: Obx(() {
-        final SectionState<List<Event>> state = controller.events.value;
+    return Obx(() {
+      final SectionState<List<Event>> state = controller.events.value;
 
-        if (state is SectionLoading<List<Event>>) {
-          return const SingleChildScrollView(
-            child: ShimmerLoader(shape: ShimmerShape.eventsList),
-          );
-        }
-        if (state is SectionEmpty<List<Event>>) {
-          return const _EventsEmptyState();
-        }
-        if (state is SectionError<List<Event>>) {
-          return _EventsErrorState(
-            message: state.message,
-            onRetry: controller.load,
-          );
-        }
-        if (state is SectionLoaded<List<Event>>) {
-          return _EventsLoaded(
-            events: state.data,
-            onOpenDetail: controller.openEventDetail,
-          );
-        }
-        return const SizedBox.shrink();
-      }),
-    );
+      final int count =
+          state is SectionLoaded<List<Event>> ? state.data.length : 0;
+
+      Widget body;
+      if (state is SectionLoading<List<Event>>) {
+        body = const SingleChildScrollView(
+          child: ShimmerLoader(shape: ShimmerShape.eventsList),
+        );
+      } else if (state is SectionEmpty<List<Event>>) {
+        body = const _EventsEmptyState();
+      } else if (state is SectionError<List<Event>>) {
+        body = _EventsErrorState(
+          message: state.message,
+          onRetry: controller.load,
+        );
+      } else if (state is SectionLoaded<List<Event>>) {
+        body = _EventsLoaded(
+          events: state.data,
+          onOpenDetail: controller.openEventDetail,
+        );
+      } else {
+        body = const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          KioskScreenHeader(
+            title: 'Upcoming Events',
+            icon: Icons.calendar_month_rounded,
+            subtitle: 'Join us at the masjid and in the community'
+                '${count > 0 ? '  •  $count ${count == 1 ? 'event' : 'events'}' : ''}',
+          ),
+          const SizedBox(height: 14),
+          Expanded(child: body),
+        ],
+      );
+    });
   }
 }
 

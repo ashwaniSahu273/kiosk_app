@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/data/models/models.dart';
 import '../next_prayer_resolver.dart';
+import 'scan_to_donate_card.dart';
 
 /// Home next-prayer dashboard (Requirements 6.1, 6.3, 6.5).
 class NextPrayerCard extends StatelessWidget {
@@ -15,6 +16,7 @@ class NextPrayerCard extends StatelessWidget {
     required this.countdownLabel,
     required this.now,
     this.fillHeight = false,
+    this.donationUrl,
   });
 
   final PrayerSchedule schedule;
@@ -24,6 +26,10 @@ class NextPrayerCard extends StatelessWidget {
   final DateTime now;
   final bool fillHeight;
 
+  /// The active organization's donation URL, rendered as a Scan-to-Donate QR
+  /// inside the dashboard. Null/blank hides the QR column.
+  final String? donationUrl;
+
   @override
   Widget build(BuildContext context) {
     final NextPrayerResult? resolved = next;
@@ -31,7 +37,11 @@ class NextPrayerCard extends StatelessWidget {
 
     if (fillHeight) {
       if (showCountdown) {
-        return _HomeNextPrayerDashboard(schedule: schedule, next: resolved);
+        return _HomeNextPrayerDashboard(
+          schedule: schedule,
+          next: resolved,
+          donationUrl: donationUrl,
+        );
       }
       return const _HomeNoCountdownState();
     }
@@ -47,10 +57,15 @@ class NextPrayerCard extends StatelessWidget {
 
 /// Landscape home layout matching the next-prayer mockup.
 class _HomeNextPrayerDashboard extends StatelessWidget {
-  const _HomeNextPrayerDashboard({required this.schedule, required this.next});
+  const _HomeNextPrayerDashboard({
+    required this.schedule,
+    required this.next,
+    this.donationUrl,
+  });
 
   final PrayerSchedule schedule;
   final NextPrayerResult next;
+  final String? donationUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -84,24 +99,6 @@ class _HomeNextPrayerDashboard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: <Widget>[
-          Positioned(
-            left: -54,
-            bottom: -36,
-            child: Icon(
-              Icons.mosque_rounded,
-              size: 278,
-              color: scheme.primary.withValues(alpha: 0.14),
-            ),
-          ),
-          Positioned(
-            left: 28,
-            top: 86,
-            child: Icon(
-              Icons.nightlight_round,
-              size: 54,
-              color: scheme.primary.withValues(alpha: 0.72),
-            ),
-          ),
           Align(
             alignment: Alignment.topCenter,
             child: Container(
@@ -126,18 +123,18 @@ class _HomeNextPrayerDashboard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(318, 62, 72, 36),
+            padding: const EdgeInsets.fromLTRB(28, 62, 28, 28),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Expanded(
-                  flex: 46,
+                  flex: 38,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       FittedBox(
                         fit: BoxFit.scaleDown,
-                        child:                         Text(
+                        child: Text(
                           next.prayer.name,
                           style: theme.textTheme.headlineSmall?.copyWith(
                             color: scheme.primary,
@@ -169,10 +166,15 @@ class _HomeNextPrayerDashboard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: 20),
                 Expanded(
-                  flex: 54,
+                  flex: 42,
                   child: _UpcomingPrayersList(prayers: upcoming, theme: theme),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  flex: 26,
+                  child: _DashboardQr(donationUrl: donationUrl, theme: theme),
                 ),
               ],
             ),
@@ -407,6 +409,74 @@ class _UpcomingPrayersList extends StatelessWidget {
                 ),
               );
             },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Scan-to-Donate QR rendered as the dashboard's right-most column.
+class _DashboardQr extends StatelessWidget {
+  const _DashboardQr({required this.donationUrl, required this.theme});
+
+  final String? donationUrl;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = theme.colorScheme;
+    final String? url = donationUrl;
+    final bool hasUrl = url != null && url.trim().isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(Icons.qr_code_2_rounded, color: scheme.primary, size: 18),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                'SCAN TO DONATE',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: Center(
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final double qrSize = math.min(
+                  constraints.maxWidth,
+                  constraints.maxHeight,
+                ).clamp(60.0, 150.0);
+
+                if (!hasUrl) {
+                  return Icon(
+                    Icons.qr_code_2_rounded,
+                    size: qrSize,
+                    color: scheme.onSurface.withValues(alpha: 0.30),
+                  );
+                }
+
+                return ScanToDonateCard(
+                  donationUrl: url,
+                  size: qrSize,
+                  showUrl: false,
+                  showCaption: false,
+                );
+              },
+            ),
           ),
         ),
       ],

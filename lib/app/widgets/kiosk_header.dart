@@ -276,7 +276,7 @@ class KioskHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          _KioskHeaderStatusStrip(clock: clock),
+          KioskHeaderStatusStrip(clock: clock),
           if (trailing != null) ...<Widget>[
             const SizedBox(width: 16),
             trailing!,
@@ -287,17 +287,19 @@ class KioskHeader extends StatelessWidget {
   }
 }
 
-class _KioskHeaderStatusStrip extends StatefulWidget {
-  const _KioskHeaderStatusStrip({this.clock});
+/// The live date/time/settings status strip shown at the right of the kiosk
+/// top bar. Exposed so the navigation bar can compose it directly.
+class KioskHeaderStatusStrip extends StatefulWidget {
+  const KioskHeaderStatusStrip({super.key, this.clock});
 
   final DateTime Function()? clock;
 
   @override
-  State<_KioskHeaderStatusStrip> createState() =>
+  State<KioskHeaderStatusStrip> createState() =>
       _KioskHeaderStatusStripState();
 }
 
-class _KioskHeaderStatusStripState extends State<_KioskHeaderStatusStrip> {
+class _KioskHeaderStatusStripState extends State<KioskHeaderStatusStrip> {
   static const Duration _tick = Duration(seconds: 1);
 
   Timer? _timer;

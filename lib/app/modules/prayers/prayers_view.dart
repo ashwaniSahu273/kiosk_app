@@ -19,6 +19,12 @@ class PrayersView extends GetView<PrayersController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
+          const KioskScreenHeader(
+            title: 'Prayer Times',
+            icon: Icons.mosque_rounded,
+            subtitle: "Today's salah, daily timetable, and the monthly schedule",
+          ),
+          const SizedBox(height: 14),
           PrayerTimesHeader(controller: controller),
           const SizedBox(height: 12),
           Expanded(

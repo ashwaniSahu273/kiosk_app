@@ -71,38 +71,50 @@ class _DonationCategoriesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SectionCard(
-      title: 'Donation Campaigns',
-      icon: Icons.volunteer_activism_rounded,
-      expandChild: true,
-      child: Obx(() {
-        final SectionState<List<DonationCategory>> state =
-            controller.categories.value;
+    return Obx(() {
+      final SectionState<List<DonationCategory>> state =
+          controller.categories.value;
 
-        if (state is SectionLoading<List<DonationCategory>>) {
-          return const SingleChildScrollView(
-            child: ShimmerLoader(shape: ShimmerShape.donationCategories),
-          );
-        }
-        if (state is SectionEmpty<List<DonationCategory>>) {
-          return const _DonationsEmptyState();
-        }
-        if (state is SectionError<List<DonationCategory>>) {
-          return _DonationsErrorState(
-            message: state.message,
-            onRetry: controller.load,
-          );
-        }
-        if (state is SectionLoaded<List<DonationCategory>>) {
-          return _DonationsLoaded(
-            categories: state.data,
-            onOpenDetail: controller.openCategoryDetail,
-            onDonate: controller.startDonation,
-          );
-        }
-        return const SizedBox.shrink();
-      }),
-    );
+      final int count = state is SectionLoaded<List<DonationCategory>>
+          ? state.data.length
+          : 0;
+
+      Widget body;
+      if (state is SectionLoading<List<DonationCategory>>) {
+        body = const SingleChildScrollView(
+          child: ShimmerLoader(shape: ShimmerShape.donationCategories),
+        );
+      } else if (state is SectionEmpty<List<DonationCategory>>) {
+        body = const _DonationsEmptyState();
+      } else if (state is SectionError<List<DonationCategory>>) {
+        body = _DonationsErrorState(
+          message: state.message,
+          onRetry: controller.load,
+        );
+      } else if (state is SectionLoaded<List<DonationCategory>>) {
+        body = _DonationsLoaded(
+          categories: state.data,
+          onOpenDetail: controller.openCategoryDetail,
+          onDonate: controller.startDonation,
+        );
+      } else {
+        body = const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          KioskScreenHeader(
+            title: 'Donation Campaigns',
+            icon: Icons.volunteer_activism_rounded,
+            subtitle: 'Support the causes that matter to our community'
+                '${count > 0 ? '  •  $count ${count == 1 ? 'campaign' : 'campaigns'}' : ''}',
+          ),
+          const SizedBox(height: 14),
+          Expanded(child: body),
+        ],
+      );
+    });
   }
 }
 

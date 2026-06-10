@@ -72,37 +72,48 @@ class _ProgramsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SectionCard(
-      title: 'Available Programs',
-      icon: Icons.event_rounded,
-      expandChild: true,
-      child: Obx(() {
-        final SectionState<List<Program>> state = controller.programs.value;
+    return Obx(() {
+      final SectionState<List<Program>> state = controller.programs.value;
 
-        if (state is SectionLoading<List<Program>>) {
-          return const SingleChildScrollView(
-            child: ShimmerLoader(shape: ShimmerShape.programsCampaignList),
-          );
-        }
-        if (state is SectionEmpty<List<Program>>) {
-          return const _ProgramsEmptyState();
-        }
-        if (state is SectionError<List<Program>>) {
-          return _ProgramsErrorState(
-            message: state.message,
-            onRetry: controller.load,
-          );
-        }
-        if (state is SectionLoaded<List<Program>>) {
-          return _ProgramsLoaded(
-            programs: state.data,
-            onOpenDetail: controller.openProgramDetail,
-            onRegister: controller.startRegistration,
-          );
-        }
-        return const SizedBox.shrink();
-      }),
-    );
+      final int count =
+          state is SectionLoaded<List<Program>> ? state.data.length : 0;
+
+      Widget body;
+      if (state is SectionLoading<List<Program>>) {
+        body = const SingleChildScrollView(
+          child: ShimmerLoader(shape: ShimmerShape.programsCampaignList),
+        );
+      } else if (state is SectionEmpty<List<Program>>) {
+        body = const _ProgramsEmptyState();
+      } else if (state is SectionError<List<Program>>) {
+        body = _ProgramsErrorState(
+          message: state.message,
+          onRetry: controller.load,
+        );
+      } else if (state is SectionLoaded<List<Program>>) {
+        body = _ProgramsLoaded(
+          programs: state.data,
+          onOpenDetail: controller.openProgramDetail,
+          onRegister: controller.startRegistration,
+        );
+      } else {
+        body = const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          KioskScreenHeader(
+            title: 'Available Programs',
+            icon: Icons.event_rounded,
+            subtitle: 'Learn, grow, and connect through our programs'
+                '${count > 0 ? '  •  $count ${count == 1 ? 'program' : 'programs'}' : ''}',
+          ),
+          const SizedBox(height: 14),
+          Expanded(child: body),
+        ],
+      );
+    });
   }
 }
 
